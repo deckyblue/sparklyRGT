@@ -100,9 +100,9 @@ def drop_subjects(df, subs):
 def edit_sess(df, orig_sess, new_sess,subs = 'all'):
     if subs == 'all':
         for i,sess in enumerate(orig_sess):
-            for i in range(len(df)):
-                if df.at[i,'Session']== sess:
-                    df.at[i,'Session'] = new_sess[i]
+            for j in range(len(df)):
+                if df.at[j,'Session']== sess:
+                    df.at[j,'Session'] = new_sess[i]
     else:
         for sub in subs:
             index = list(df.loc[df['Subject']==sub].index)
@@ -110,6 +110,28 @@ def edit_sess(df, orig_sess, new_sess,subs = 'all'):
                 for idx in index:
                     if df.at[idx,'Session'] == sess:
                         df.at[idx,'Session'] = new_sess[i]
+    return df
+
+# def edit_sess(df, orig_sess, new_sess, subs = 'all'):
+#     if subs == 'all':
+#         for i in range(len(df)): 
+#             if df.at[i, 'Session'] == orig_sess:
+#                 df.at[i, 'Session'] = new_sess
+#     return df
+
+def edit_group(df, orig_group, new_group, subs = 'all'):
+    if subs == 'all':
+        for i,group in enumerate(orig_group):
+            for j in range(len(df)):
+                if df.at[j,'Group'] == group:
+                    df.at[j,'Group'] = new_group[i]
+    else:
+        for sub in subs:
+            index = list(df.loc[df['Subject']==sub].index)
+            for i,group in enumerate(orig_group):
+                for idx in index:
+                    if df.at[idx,'Group'] == group:
+                        df.at[idx,'Group'] = new_group[i]
     return df
     
 #------------------------------ANALYZE BY SESSION/GROUP---------------------------------#
