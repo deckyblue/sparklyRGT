@@ -79,9 +79,9 @@ def drop_sessions(df, session_nums):
     'Takes in a list of session numbers, and removes the data from specified session numbers'
     for s in session_nums:
         drop_sess = list(df.loc[df['Session'] == s].index)
-        df1 = df.drop(drop_sess)
-        df1 = df.reset_index()
-    return df1 ##could replace with check_sessions(df)
+        df1 = df.drop(drop_sess, inplace = True)
+        df1 = df.reset_index(inplace = True)
+    return df ##could replace with check_sessions(df)
 
 def drop_groups(df, group_nums):
     'Takes in a list of group numbers, and removes the data from specified group numbers'
@@ -89,7 +89,7 @@ def drop_groups(df, group_nums):
         drop_group = list(df.loc[df['Group'] == s].index)
         df.drop(drop_group, inplace = True)
         df.reset_index(inplace = True)
-    return None ##could replace with check_groups(df) or df
+    return df ##could replace with check_groups(df) or df
 
 def drop_subjects(df, subs):
     for sub in subs:
