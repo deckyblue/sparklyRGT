@@ -133,25 +133,6 @@ def edit_groups(df, orig_group, new_group, subs = 'all'):
                     if df.at[idx,'Group'] == group:
                         df.at[idx,'Group'] = new_group[i]
     return df
-
-def impute_missing_data(df1, session = None, subject = None, choice = None, vars = None):
-    if choice == 'all':
-        for i in range(1,5):
-            df1.at[subject,str(session)+'P'+str(i)] = np.mean([df1.at[subject,str(session-1)+'P'+str(i)],
-                                                               df1.at[subject,str(session+1)+'P'+str(i)]])
-    elif choice != None:
-        for i in choice:
-            df1.at[subject,str(session)+'P'+str(i)] = np.mean([df1.at[subject,str(session-1)+'P'+str(i)],
-                                                               df1.at[subject,str(session+1)+'P'+str(i)]])
-    if vars == 'all':
-        vars = ['risk','collect_lat','choice_lat','omit','trial','prem']
-        for var in vars:
-            df1.at[subject,var+str(session)] = np.mean([df1.at[subject,var+str(session-1)],
-                                                        df1.at[subject,var + str(session+1)]])
-    elif vars != None:
-        for var in vars:
-            df1.at[subject,var+str(session)] = np.mean([df1.at[subject,var+str(session-1)],
-                                                        df1.at[subject,var + str(session+1)]])
     
 #------------------------------ANALYZE BY SESSION/GROUP---------------------------------#
 
@@ -252,6 +233,26 @@ def get_summary_data(df_raw, mode = 'Session'):
     df_sum = get_premature(df_raw,df_sum,mode)
     return df_sum
 
+def impute_missing_data(df1, session = None, subject = None, choice = None, vars = None):
+    if choice == 'all':
+        for i in range(1,5):
+            df1.at[subject,str(session)+'P'+str(i)] = np.mean([df1.at[subject,str(session-1)+'P'+str(i)],
+                                                               df1.at[subject,str(session+1)+'P'+str(i)]])
+    elif choice != None:
+        for i in choice:
+            df1.at[subject,str(session)+'P'+str(i)] = np.mean([df1.at[subject,str(session-1)+'P'+str(i)],
+                                                               df1.at[subject,str(session+1)+'P'+str(i)]])
+    if vars == 'all':
+        vars = ['risk','collect_lat','choice_lat','omit','trial','prem']
+        for var in vars:
+            df1.at[subject,var+str(session)] = np.mean([df1.at[subject,var+str(session-1)],
+                                                        df1.at[subject,var + str(session+1)]])
+    elif vars != None:
+        for var in vars:
+            df1.at[subject,var+str(session)] = np.mean([df1.at[subject,var+str(session-1)],
+                                                        df1.at[subject,var + str(session+1)]])
+    return df1
+
 #--------------------------------GET RISK STATUS-------------------------------#
 
 def get_risk_status(df_sum, startsess, endsess):
@@ -298,22 +299,23 @@ def export_to_excel(df, groups, column_name = 'group', file_name = 'summary_data
     df_export.sort_index(inplace = True) #this sorts the subjects so they're in the right order after combining
     df_export.to_excel(file_name, index_label = 'Subject')
     
-def export_to_excel2(df, groups, groupname, file_name, asin = False):
-#save specified number of sessions as excel file
-    dfs = []
-    for group in groups:
-        dfs.append(df.loc[group])
-    for i,df in enumerate(dfs):
-        df[groupname] = i
-    df_export = pd.concat(dfs)
-    if asin:
-        col_list = [col for col in df.columns if 'P' in col] + [col for col in df.columns if 'prem' in col]
-        for col in col_list:
-            for sub in df_export.index:
-                df_export.at[sub,col] = np.arcsin(math.sqrt(df_export.at[sub,col]/100))
-    df_export.sort_index(inplace = True)
-    df_export.to_excel(filename, index_label = 'Subject')
+# def export_to_excel2(df, groups, groupname, file_name, asin = False): 
+# #save specified number of sessions as excel file
+#     dfs = []
+#     for group in groups:
+#         dfs.append(df.reindex(list([group])))
+#     for i,df in enumerate(dfs):
+#         df[groupname] = i
+#     df_export = pd.concat(dfs)
+#     if asin:
+#         col_list = [col for col in df.columns if 'P' in col] + [col for col in df.columns if 'prem' in col]
+#         for col in col_list:
+#             for sub in df_export.index:
+#                 df_export.at[sub,col] = np.arcsin(math.sqrt(df_export.at[sub,col]/100))
+#     df_export.sort_index(inplace = True)
+#     df_export.to_excel(file_name, index_label = 'Subject')
     
+##export to excel2 is not working due to insufficient datafiles 
 #------------------------------GET EXPERIMENTAL/CONTROL GROUP MEANS---------------------------------#
    
 def get_group_means_sem(df_sum,groups, group_names): ##exact same in ls and data_prep --> but objects are named differently
@@ -334,6 +336,22 @@ def get_group_means_sem(df_sum,groups, group_names): ##exact same in ls and data
     stderror.rename(index=group_names, inplace = True)
     return mean_scores, stderror
 
+def get_group_means_sem2(df_sum, groups, group_names):
+    dfs = []
+    for group in groups:
+        dfs.append(df_sum.reindex(list([group])))
+    avg_scores = pd.DataFrame(columns=list(df_sum.columns))
+    avg_stderror = pd.DataFrame(columns=avg_scores.columns)
+    for column in avg_scores.columns:
+        for i in range(len(groups)):
+            avg_scores.at[i,column] = dfs[i][column].mean()
+            avg_stderror.at[i,column] = stats.sem(dfs[i][column])
+            
+    avg_scores.rename(index=group_names,inplace = True)
+    avg_stderror.rename(index=group_names, inplace = True)
+    return avg_scores, avg_stderror
+
+##get_group_means_sem2 is not working due to insufficient data 
 #------------------------------PLOTTING BY SESSION---------------------------------#
 
 def rgt_plot(variable,startsess,endsess,group_names,title,scores,sem, highlight = None, var_title = None):
