@@ -79,9 +79,9 @@ def drop_sessions(df, session_nums):
     'Takes in a list of session numbers, and removes the data from specified session numbers'
     for s in session_nums:
         drop_sess = list(df.loc[df['Session'] == s].index)
-        df.drop(drop_sess, inplace = True)
-        df.reset_index(inplace = True)
-    return None ##could replace with check_sessions(df)
+        df1 = df.drop(drop_sess)
+        df1 = df.reset_index()
+    return df1 ##could replace with check_sessions(df)
 
 def drop_groups(df, group_nums):
     'Takes in a list of group numbers, and removes the data from specified group numbers'
@@ -353,34 +353,38 @@ def get_group_means_sem2(df_sum, groups, group_names):
 
 ##get_group_means_sem2 is not working due to insufficient data 
 #------------------------------PLOTTING BY SESSION---------------------------------#
-
-def rgt_plot(variable,startsess,endsess,group_names,title,scores,sem, highlight = None, var_title = None):
-    ##startsess and endsess allow us to clip the session data 
+    
+def rgt_plot(variable,startsess,endsess,group_names,title,scores,sem,cmap = 'default', highlight = None, var_title = None): ##might want to make ls_rgt_plot
     if var_title == None:
         var_title = variable
-    plt.rcParams.update({'font.size': 22})
-    fig,ax = plt.subplots(figsize = (20,10))
-    ax.set_ylabel(var_title)
-    ax.set_xlabel('Session')
-    ax.set_xlim(startsess,endsess)
-    ax.set_title(title + ': ' + var_title + '\n' + 'Session ' + str(startsess) + '-' + str(endsess))
+    plt.rcParams.update({'font.size': 18})
+    fig,ax = plt.subplots(figsize = (15,8))
+    ax.set_ylabel(var_title, fontweight='bold', fontsize = 22)
+    ax.set_xlabel('Session', fontweight = 'bold', fontsize = 22)
+    ax.set_title(title + ': ' + var_title + '\n' + 'Session ' + str(startsess) + '-' + str(endsess),
+                fontweight = 'bold', fontsize = 22, pad = 20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
     ax.spines['left'].set_linewidth(2)
     ax.spines['bottom'].set_linewidth(2)
-    ax.set_xlim(startsess-.1,endsess+.1)
-    x=np.arange(startsess,endsess+1)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    x=np.arange(startsess,endsess+1)
+    if cmap == 'Paired':
+        colors = [plt.cm.Paired(5),plt.cm.Paired(1),plt.cm.Paired(4),plt.cm.Paired(0)]
+    if cmap == 'default':
+        colors = [plt.cm.Set1(1),plt.cm.Set1(0)]
    
-    for i,group in enumerate(group_names):
+    for i,group in enumerate(group_names.values()):
         y = scores.loc[group,variable+str(startsess):variable+str(endsess)]
         plt.errorbar(x, y,
                      yerr = sem.loc[group,variable+str(startsess):variable+str(endsess)], 
-                     label=group,linewidth=4, capsize = 8)
+                     label=group,linewidth=5, capsize = 8)
     if highlight != None:
         plt.axvline(highlight, 0, 1, color = 'gray', lw = 1)
         ax.fill_between([highlight,endsess], ax.get_ylim()[0], ax.get_ylim()[1], facecolor='gray', alpha=0.2)
     ax.legend()
+    ax.set_xticks(np.arange(startsess,endsess+1))
 
 def choice_bar_plot(startsess, endsess, scores, sem,cmap = 'default'):
     sess = list(range(startsess,endsess + 1))
