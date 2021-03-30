@@ -289,14 +289,17 @@ def get_risk_status_vehicle(df1):
 
 #-------------------------------EXPORT TO EXCEL--------------------------------#
 
-def export_to_excel(df, groups, column_name = 'group', new_file_name = 'summary_data'):
-    dfs = []
-    for group in groups: #this splits the dataframe by group
-        dfs.append(df.loc[group])
-    for i,df in enumerate(dfs): #this assigns a number to the tg_status column - in this case, 0 for control, 1 for experimental
-        df[column_name] = i ##i should be 0 and 1
-    df_export = pd.concat(dfs) #this recombines the dataframes
-    df_export.sort_index(inplace = True) #this sorts the subjects so they're in the right order after combining
+def export_to_excel(df, groups = None, column_name = 'group', new_file_name = 'summary_data'):
+    if groups == None:
+        df_export = df
+    else:
+        dfs = []
+        for group in groups: #this splits the dataframe by group
+            dfs.append(df.loc[group])
+        for i,df in enumerate(dfs): #this assigns a number to the group column - in this case, 0 for control, 1 for experimental
+            df[column_name] = i ##i should be 0 and 1
+        df_export = pd.concat(dfs) #this recombines the dataframes
+        df_export.sort_index(inplace = True) #this sorts the subjects so they're in the right order after combining
     df_export.to_excel(new_file_name, index_label = 'Subject')
     
 # def export_to_excel2(df, groups, groupname, file_name, asin = False): 
@@ -318,43 +321,37 @@ def export_to_excel(df, groups, column_name = 'group', new_file_name = 'summary_
 ##export to excel2 is not working due to insufficient datafiles 
 #------------------------------GET EXPERIMENTAL/CONTROL GROUP MEANS---------------------------------#
    
-def get_group_means_sem(df_sum,groups, group_names): ##exact same in ls and data_prep --> but objects are named differently
-    dfs = []
-    #first split the dataframe based on experimental vs control
-    for group in groups:
-        dfs.append(df_sum.loc[group])
-    #create two dataframes - one for the means, one for the SEM
-    mean_scores = pd.DataFrame(columns=list(df_sum.columns))
-    stderror = pd.DataFrame(columns=mean_scores.columns)
-    #calculate the mean and standard errors, and store them in the above dataframes
-    for column in mean_scores.columns:
-        for i in range(len(groups)):
-            mean_scores.at[i,column] = dfs[i][column].mean()
-            stderror.at[i,column] = stats.sem(dfs[i][column])
-    #rename the rows to be the group_names (i.e., transgene positive and transgene negative)   
-    mean_scores.rename(index=group_names,inplace = True)
-    stderror.rename(index=group_names, inplace = True)
-    return mean_scores, stderror
+def get_means_sem(df_sum, groups = None, group_names = None): 
+    if groups == None:
+        mean_scores = pd.DataFrame(columns=list(df_sum.columns))
+        SEM = pd.DataFrame(columns=mean_scores.columns)
+        for column in mean_scores.columns:
+            mean_scores.at[0,column] = df_sum[column].mean()
+            SEM.at[0,column] = stats.sem(df_sum[column])
+        mean_scores.rename(index={0: 'All rats'},inplace = True)
+        SEM.rename(index={0: 'All rats'}, inplace = True)
+    else:
+        dfs = []
+        #first split the dataframe based on experimental vs control
+        for group in groups:
+            dfs.append(df_sum.loc[group])
+        #create two dataframes - one for the means, one for the SEM
+        mean_scores = pd.DataFrame(columns=list(df_sum.columns))
+        SEM = pd.DataFrame(columns=mean_scores.columns)
+        #calculate the mean and standard errors, and store them in the above dataframes
+        for column in mean_scores.columns:
+            for i in range(len(groups)):
+                mean_scores.at[i,column] = dfs[i][column].mean()
+                SEM.at[i,column] = stats.sem(dfs[i][column])
+        #rename the rows to be the group_names (i.e., transgene positive and transgene negative)   
+        mean_scores.rename(index=group_names,inplace = True)
+        SEM.rename(index=group_names, inplace = True)
+    return mean_scores, SEM
 
-def get_group_means_sem2(df_sum, groups, group_names):
-    dfs = []
-    for group in groups:
-        dfs.append(df_sum.reindex(list([group])))
-    avg_scores = pd.DataFrame(columns=list(df_sum.columns))
-    avg_stderror = pd.DataFrame(columns=avg_scores.columns)
-    for column in avg_scores.columns:
-        for i in range(len(groups)):
-            avg_scores.at[i,column] = dfs[i][column].mean()
-            avg_stderror.at[i,column] = stats.sem(dfs[i][column])
-            
-    avg_scores.rename(index=group_names,inplace = True)
-    avg_stderror.rename(index=group_names, inplace = True)
-    return avg_scores, avg_stderror
 
-##get_group_means_sem2 is not working due to insufficient data 
 #------------------------------PLOTTING BY SESSION---------------------------------#
     
-def rgt_plot(variable,startsess,endsess,group_names,title,scores,sem,cmap = 'default', highlight = None, var_title = None): ##might want to make ls_rgt_plot
+def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, cmap = 'default', highlight = None, var_title = None):
     if var_title == None:
         var_title = variable
     plt.rcParams.update({'font.size': 18})
@@ -368,24 +365,32 @@ def rgt_plot(variable,startsess,endsess,group_names,title,scores,sem,cmap = 'def
     ax.spines['left'].set_linewidth(2)
     ax.spines['bottom'].set_linewidth(2)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.set_xticks(np.arange(startsess,endsess+1))
 
     x=np.arange(startsess,endsess+1)
+    
     if cmap == 'Paired':
         colors = [plt.cm.Paired(5),plt.cm.Paired(1),plt.cm.Paired(4),plt.cm.Paired(0)]
     if cmap == 'default':
         colors = [plt.cm.Set1(1),plt.cm.Set1(0)]
    
-    for i,group in enumerate(group_names.values()):
-        y = scores.loc[group,variable+str(startsess):variable+str(endsess)]
+    if group_names == None:
+        y = scores.loc['All rats',variable+str(startsess):variable+str(endsess)]
         plt.errorbar(x, y,
-                     yerr = sem.loc[group,variable+str(startsess):variable+str(endsess)], 
-                     label=group,linewidth=5, capsize = 8)
+                     yerr = sem.loc['All rats',variable+str(startsess):variable+str(endsess)], 
+                     linewidth=5, capsize = 8)
+    else:
+        for i,group in enumerate(group_names.values()):
+            y = scores.loc[group,variable+str(startsess):variable+str(endsess)]
+            plt.errorbar(x, y,
+                         yerr = sem.loc[group,variable+str(startsess):variable+str(endsess)], 
+                         label=group,linewidth=5, capsize = 8)
+            ax.legend()
+       
     if highlight != None:
         plt.axvline(highlight, 0, 1, color = 'gray', lw = 1)
         ax.fill_between([highlight,endsess], ax.get_ylim()[0], ax.get_ylim()[1], facecolor='gray', alpha=0.2)
-    ax.legend()
-    ax.set_xticks(np.arange(startsess,endsess+1))
-
+        
 def choice_bar_plot(startsess, endsess, scores, sem,cmap = 'default'):
     sess = list(range(startsess,endsess + 1))
     labels = ['P1','P2','P3','P4']
@@ -463,9 +468,9 @@ def rgt_bar_plot(variable,startsess,endsess,group_names,title,scores,sem, var_ti
    
     ax = plt.gca()
     plt.xticks([])
-    plt.xlabel('Task', labelpad = 20)
-    ax.set_ylabel('% Premature')
-    ax.set_ylim(0,50)
+    plt.xlabel('Group', labelpad = 20)
+    ax.set_ylabel(var_title)
+    #ax.set_ylim(0,50)
     ax.set_title(var_title,fontweight = 'bold', fontsize = 22, pad = 20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
