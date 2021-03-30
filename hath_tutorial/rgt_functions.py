@@ -80,7 +80,7 @@ def drop_sessions(df, session_nums):
     for s in session_nums:
         drop_sess = list(df.loc[df['Session'] == s].index)
         df1 = df.drop(drop_sess, inplace = True)
-        df1 = df.reset_index(inplace = True)
+        df1 = df.reset_index(drop = True, inplace = True)
     return df ##could replace with check_sessions(df)
 
 def drop_groups(df, group_nums):
@@ -88,16 +88,16 @@ def drop_groups(df, group_nums):
     for s in group_nums:
         drop_group = list(df.loc[df['Group'] == s].index)
         df.drop(drop_group, inplace = True)
-        df.reset_index(inplace = True)
+        df.reset_index(drop = True, inplace = True)
     return df ##could replace with check_groups(df) or df
 
 def drop_subjects(df, subs):
     for sub in subs:
         df.drop(list(df.loc[df['Subject']==sub].index), inplace=True)
-    df.reset_index(inplace=True)
+    df.reset_index(drop = True, inplace=True)
     return df
 
-def edit_sessions(df, orig_sess, new_sess,subs = 'all'):
+def edit_sessions(df, orig_sess = None, new_sess = None,subs = 'all'):
     if subs == 'all':
         for i,sess in enumerate(orig_sess):
             for j in range(len(df)):
@@ -110,14 +110,9 @@ def edit_sessions(df, orig_sess, new_sess,subs = 'all'):
                 for idx in index:
                     if df.at[idx,'Session'] == sess:
                         df.at[idx,'Session'] = new_sess[i]
+    df.reset_index(drop = True, inplace = True)
     return df
 
-# def edit_sess(df, orig_sess, new_sess, subs = 'all'):
-#     if subs == 'all':
-#         for i in range(len(df)): 
-#             if df.at[i, 'Session'] == orig_sess:
-#                 df.at[i, 'Session'] = new_sess
-#     return df
 
 def edit_groups(df, orig_group, new_group, subs = 'all'):
     if subs == 'all':
@@ -132,6 +127,7 @@ def edit_groups(df, orig_group, new_group, subs = 'all'):
                 for idx in index:
                     if df.at[idx,'Group'] == group:
                         df.at[idx,'Group'] = new_group[i]
+    df.reset_index(drop = True, inplace = True)
     return df
     
 #------------------------------ANALYZE BY SESSION/GROUP---------------------------------#
@@ -351,14 +347,14 @@ def get_means_sem(df_sum, groups = None, group_names = None):
 
 #------------------------------PLOTTING BY SESSION---------------------------------#
     
-def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, cmap = 'default', highlight = None, var_title = None):
-    if var_title == None:
-        var_title = variable
+def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, highlight = None, y_label = None, x_label = 'Session'):
+    if y_label == None:
+        y_label = variable
     plt.rcParams.update({'font.size': 18})
     fig,ax = plt.subplots(figsize = (15,8))
-    ax.set_ylabel(var_title, fontweight='bold', fontsize = 22)
-    ax.set_xlabel('Session', fontweight = 'bold', fontsize = 22)
-    ax.set_title(title + ': ' + var_title + '\n' + 'Session ' + str(startsess) + '-' + str(endsess),
+    ax.set_ylabel(y_label, fontweight='bold', fontsize = 20)
+    ax.set_xlabel(x_label, fontweight = 'bold', fontsize = 20)
+    ax.set_title(title + ': ' + y_label + '\n' + 'Session ' + str(startsess) + '-' + str(endsess),
                 fontweight = 'bold', fontsize = 22, pad = 20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
@@ -368,11 +364,6 @@ def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, cm
     ax.set_xticks(np.arange(startsess,endsess+1))
 
     x=np.arange(startsess,endsess+1)
-    
-    if cmap == 'Paired':
-        colors = [plt.cm.Paired(5),plt.cm.Paired(1),plt.cm.Paired(4),plt.cm.Paired(0)]
-    if cmap == 'default':
-        colors = [plt.cm.Set1(1),plt.cm.Set1(0)]
    
     if group_names == None:
         y = scores.loc['All rats',variable+str(startsess):variable+str(endsess)]
@@ -391,15 +382,40 @@ def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, cm
         plt.axvline(highlight, 0, 1, color = 'gray', lw = 1)
         ax.fill_between([highlight,endsess], ax.get_ylim()[0], ax.get_ylim()[1], facecolor='gray', alpha=0.2)
         
-def choice_bar_plot(startsess, endsess, scores, sem,cmap = 'default'):
+def rgt_bar_plot(variable,startsess,endsess,title,scores,sem, group_names = None, y_label = None):
+    if y_label == None:
+        y_label = variable
+    plt.rcParams.update({'font.size': 18}) 
+    plt.rcParams["figure.figsize"] = (15,8)
+    
+    bars = [0,0,0,0,0]
+    err = [0,0,0,0,0]
+    sess = [variable + str(s) for s in list(range(startsess,endsess+1))]
+    for i,group in enumerate(scores.index):
+        bars[i] = scores.loc[group, [col for col in scores.columns if col in sess]].mean()
+        err[i] = sem.loc[group, [col for col in sem.columns if col in sess]].mean()
+        plt.bar(i, bars[i], yerr = err[i], capsize = 8, width = .7, color = ['C'+str(i)], label = scores.index[i])
+   
+    ax = plt.gca()
+    plt.xticks([])
+    plt.xlabel('Group', labelpad = 20, fontweight = 'bold', fontsize = 20)
+    ax.set_ylabel(y_label, fontweight = 'bold', fontsize = 20)
+    #ax.set_ylim(0,50)
+    ax.set_title(title + ': ' + y_label + '\n' + 'Session ' + str(startsess) + '-' + str(endsess),
+                 fontweight = 'bold', fontsize = 22, pad = 20)
+    ax.spines['right'].set_linewidth(0)
+    ax.spines['top'].set_linewidth(0)
+    ax.spines['left'].set_linewidth(2)
+    ax.spines['bottom'].set_linewidth(2)
+    ax.legend()
+        
+        
+def choice_bar_plot(startsess, endsess, scores, sem):
     sess = list(range(startsess,endsess + 1))
     labels = ['P1','P2','P3','P4']
     df = pd.DataFrame()
     df1 = pd.DataFrame()
-    if cmap == 'Paired':
-        colors = [plt.cm.Paired(5),plt.cm.Paired(1),plt.cm.Paired(4),plt.cm.Paired(0)]
-    if cmap == 'default':
-        colors = [plt.cm.Set1(1),plt.cm.Set1(0)]
+
     for choice in labels:
         df[choice] = scores.loc[:, [col for col in scores.columns if choice in col 
                                     and int(col[:col.index('P')]) in sess]].mean(axis = 1)
@@ -409,8 +425,9 @@ def choice_bar_plot(startsess, endsess, scores, sem,cmap = 'default'):
     
     # Add some text for labels, title and custom x-axis tick labels, etc.
     plt.rcParams.update({'font.size': 18})
-    ax.set_ylabel('% Choice', fontweight = 'bold', fontsize = 18)
-    ax.set_title('P1-P4 Choice', fontweight = 'bold', fontsize = 22, pad = 20)
+    ax.set_ylabel('% Choice', fontweight = 'bold', fontsize = 20)
+    ax.set_title( 'P1-P4 Choice'  '\n' + 'Session ' + str(startsess) + '-' + str(endsess), 
+                 fontweight = 'bold', fontsize = 22, pad = 20)
     ax.set_ylim(bottom = 0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
@@ -418,7 +435,7 @@ def choice_bar_plot(startsess, endsess, scores, sem,cmap = 'default'):
     ax.spines['bottom'].set_linewidth(2)
     ax.legend()
     
-#------------------------------PLOTTING BY GROUPS---------------------------------#
+#------------------------------PLOTTING for Latin Squares---------------------------------#
     
 def ls_bar_plot(figure_group, group_means, sem):
     labels = ['P1','P2','P3','P4']
@@ -441,9 +458,9 @@ def ls_bar_plot(figure_group, group_means, sem):
                     yerr = list(sem.loc[figure_group,[col for col in sem.columns if col.startswith('4')]]), ecolor='C2', color = 'C2')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('% Choice', fontweight = 'bold', fontsize = 22)
+    ax.set_ylabel('% Choice', fontweight = 'bold', fontsize = 20)
     ax.set_title(figure_group + ': P1-P4', fontweight = 'bold', fontsize = 24, pad = 20)
-    ax.set_ylim(bottom = 0,top = 85)
+    ax.set_ylim(bottom = 0,top = 100)
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.spines['right'].set_linewidth(0)
@@ -452,28 +469,3 @@ def ls_bar_plot(figure_group, group_means, sem):
     ax.spines['bottom'].set_linewidth(2)
     ax.legend()
     
-def rgt_bar_plot(variable,startsess,endsess,group_names,title,scores,sem, var_title = None):
-    if var_title == None:
-        var_title = variable
-    plt.rcParams.update({'font.size': 20}) 
-    plt.rcParams["figure.figsize"] = (15,8)
-    
-    bars = [0,0,0,0,0]
-    err = [0,0,0,0,0]
-    sess = [variable + str(s) for s in list(range(startsess,endsess+1))]
-    for i,group in enumerate(scores.index):
-        bars[i] = scores.loc[group, [col for col in scores.columns if col in sess]].mean()
-        err[i] = sem.loc[group, [col for col in sem.columns if col in sess]].mean()
-        plt.bar(i, bars[i], yerr = err[i], capsize = 8, width = .7, color = ['C'+str(i)], label = scores.index[i])
-   
-    ax = plt.gca()
-    plt.xticks([])
-    plt.xlabel('Group', labelpad = 20)
-    ax.set_ylabel(var_title)
-    #ax.set_ylim(0,50)
-    ax.set_title(var_title,fontweight = 'bold', fontsize = 22, pad = 20)
-    ax.spines['right'].set_linewidth(0)
-    ax.spines['top'].set_linewidth(0)
-    ax.spines['left'].set_linewidth(2)
-    ax.spines['bottom'].set_linewidth(2)
-    ax.legend()
