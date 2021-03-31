@@ -1,5 +1,5 @@
 """
-This module includes functions to load in MEDPC data and outputs a dataframe. 
+This module includes functions to load in MEDPC rGT data and outputs a dataframe. 
 
 Authors: Brett Hathaway & Dexter Kim 
 """
@@ -17,6 +17,7 @@ from matplotlib.ticker import MaxNLocator
 
 # stats imports 
 import scipy.stats as stats
+import math
 
 #the following line prevents pandas from giving unecessary errors 
 pd.options.mode.chained_assignment = None
@@ -285,9 +286,14 @@ def get_risk_status_vehicle(df1):
 
 #-------------------------------EXPORT TO EXCEL--------------------------------#
 
-def export_to_excel(df, groups = None, column_name = 'group', new_file_name = 'summary_data'):
+def export_to_excel(df, groups = None, column_name = 'group', new_file_name = 'summary_data', asin = False):
     if groups == None:
-        df_export = df
+        df_export = df.copy()
+        if asin:
+            col_list = [col for col in df_export.columns if 'P' in col] + [col for col in df_export.columns if 'prem' in col]
+            for col in col_list:
+                for sub in df_export.index:
+                    df_export.at[sub,col] = np.arcsin(math.sqrt(df_export.at[sub,col]/100))
     else:
         dfs = []
         for group in groups: #this splits the dataframe by group
@@ -295,26 +301,15 @@ def export_to_excel(df, groups = None, column_name = 'group', new_file_name = 's
         for i,df in enumerate(dfs): #this assigns a number to the group column - in this case, 0 for control, 1 for experimental
             df[column_name] = i ##i should be 0 and 1
         df_export = pd.concat(dfs) #this recombines the dataframes
+        if asin:
+            col_list = [col for col in df_export.columns if 'P' in col] + [col for col in df_export.columns if 'prem' in col]
+            for col in col_list:
+                for sub in df_export.index:
+                    df_export.at[sub,col] = np.arcsin(math.sqrt(df_export.at[sub,col]/100))
         df_export.sort_index(inplace = True) #this sorts the subjects so they're in the right order after combining
     df_export.to_excel(new_file_name, index_label = 'Subject')
     
-# def export_to_excel2(df, groups, groupname, file_name, asin = False): 
-# #save specified number of sessions as excel file
-#     dfs = []
-#     for group in groups:
-#         dfs.append(df.reindex(list([group])))
-#     for i,df in enumerate(dfs):
-#         df[groupname] = i
-#     df_export = pd.concat(dfs)
-#     if asin:
-#         col_list = [col for col in df.columns if 'P' in col] + [col for col in df.columns if 'prem' in col]
-#         for col in col_list:
-#             for sub in df_export.index:
-#                 df_export.at[sub,col] = np.arcsin(math.sqrt(df_export.at[sub,col]/100))
-#     df_export.sort_index(inplace = True)
-#     df_export.to_excel(file_name, index_label = 'Subject')
-    
-##export to excel2 is not working due to insufficient datafiles 
+
 #------------------------------GET EXPERIMENTAL/CONTROL GROUP MEANS---------------------------------#
    
 def get_means_sem(df_sum, groups = None, group_names = None): 
@@ -354,7 +349,7 @@ def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, hi
     fig,ax = plt.subplots(figsize = (15,8))
     ax.set_ylabel(y_label, fontweight='bold', fontsize = 20)
     ax.set_xlabel(x_label, fontweight = 'bold', fontsize = 20)
-    ax.set_title(title + ': ' + y_label + '\n' + 'Session ' + str(startsess) + '-' + str(endsess),
+    ax.set_title(title + ': ' + y_label + '\n' + x_label + ' ' + str(startsess) + '-' + str(endsess),
                 fontweight = 'bold', fontsize = 22, pad = 20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
@@ -421,7 +416,7 @@ def choice_bar_plot(startsess, endsess, scores, sem):
                                     and int(col[:col.index('P')]) in sess]].mean(axis = 1)
         df1[choice] = sem.loc[:, [col for col in scores.columns if choice in col 
                                     and int(col[:col.index('P')]) in sess]].mean(axis = 1)
-    ax = df.transpose().plot.bar(rot = 0, yerr = df1.transpose(), capsize = 8, figsize = (20,8))
+    ax = df.transpose().plot.bar(rot = 0, yerr = df1.transpose(), capsize = 8, figsize = (15,8))
     
     # Add some text for labels, title and custom x-axis tick labels, etc.
     plt.rcParams.update({'font.size': 18})
@@ -447,7 +442,7 @@ def ls_bar_plot(figure_group, group_means, sem):
     x = np.arange(len(labels))*3  # the label locations
     width = 0.5  # the width of the bars
 
-    fig, ax = plt.subplots(figsize = (10,5))
+    fig, ax = plt.subplots(figsize = (15,8))
     rects1 = ax.bar(x - width/2-width, veh_means, width, label='Vehicle',
                     yerr = list(sem.loc[figure_group,[col for col in sem.columns if col.startswith('1')]]), capsize = 8, ecolor='C0')
     rects2 = ax.bar(x - width/2, dose1_means, width, label='Dose 1', 
