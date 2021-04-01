@@ -192,7 +192,8 @@ def get_premature(df_raw,df_sum,mode = 'Session'):
 def get_latencies(df_raw,df_sum,mode = 'Session'):
     #extract collect and choice lat information
     df_raw = df_raw.loc[df_raw['Chosen'] != 0]
-    collect_lat = df_raw.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
+    df_raw2 = df_raw.loc[df_raw['Rewarded'] == 1]
+    collect_lat = df_raw2.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
     choice_lat = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
     for num in np.sort(df_raw[mode].unique()):
         df_sum['collect_lat' + str(num)] = collect_lat.loc[collect_lat[mode]==num].set_index('Subject')['Collect_Lat']
