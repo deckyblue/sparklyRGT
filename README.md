@@ -19,7 +19,8 @@ Option 2: Local software
 
 ## Setup sparklyRGT
 
+- Watch this 7min video on the basics of Jupyter Notebook: https://www.youtube.com/watch?v=jZ952vChhuI
 - Once you've cloned the sparklyRGT repository, you should see multiple folders. You will only need the "sparklyRGT_tutorial" folder. 
-- Inside the folder, refer to the "sparklyRGT_documentation" notebook (collection of annotated code). 
-- For analysis, create copies of "sparklyRGT_template_2" for baseline and acquisition analysis, and "sparklyRGT_template_3" for Latin square analysis. 
-- Lastly, don't 
+    - Inside the folder, refer to the "sparklyRGT_documentation" notebook (collection of annotated code). 
+    - For analysis, create copies of "sparklyRGT_template_2" for baseline and acquisition analysis, and "sparklyRGT_template_3" for Latin square analysis. 
+- Lastly, don't hesitate to contact dexterkim2000@gmail.com for support/suggestions.
