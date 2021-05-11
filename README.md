@@ -1,7 +1,7 @@
 # sparklyRGT
 Python RGT functions to tidy MEDPC data and plot desired variables 
 
-Setup! 
+## Setup Jupyter Notebook!
 
 Option 1: Online server 
 - This is by far the easiest option, as Git and all necessary packages are already downloaded
@@ -17,3 +17,9 @@ Option 2: Local software
     - Note! Don't download "miniconda", download "anaconda" instead (miniconda is a reduced version of anaconda and does not contain the required packages for sparklyRGT)
 - From here, follow step 3 of option 1. 
 
+## Setup sparklyRGT
+
+- Once you've cloned the sparklyRGT repository, you should see multiple folders. You will only need the "sparklyRGT_tutorial" folder. 
+- Inside the folder, refer to the "sparklyRGT_documentation" notebook (collection of annotated code). 
+- For analysis, create copies of "sparklyRGT_template_2" for baseline and acquisition analysis, and "sparklyRGT_template_3" for Latin square analysis. 
+- Lastly, don't 
