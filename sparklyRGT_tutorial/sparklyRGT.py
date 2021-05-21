@@ -155,26 +155,56 @@ def get_choices(df):
             df['option'][i] = 0 
     return df    
 
-def get_sum_choice(num, df, mode = 'Session'):
+def get_sum_choice(num, df, mode = 'Session', task = None):
     #get choice information for given group number or session number
-    df1 = df.loc[df[mode] == num]
-    subs = df1.Subject.unique()
-    subs.sort()
-    percentage = pd.DataFrame(columns=[str(num) + 'P1',str(num) + 'P2',str(num) + 'P3',str(num) + 'P4'])
-    for sub in subs:
-        for i,column in enumerate(percentage.columns):
-            percentage.at[sub,column] = (len(df1.loc[(df1.option == i + 1) & 
-                                            (df1.Subject == sub)]))/(len(df1.loc[(df1['option'] != 0) & 
-                                                                                (df.Subject == sub)])) *100
+    if task == 'choiceRGT':
+        df_cued = df.loc[(df[mode] == num) & (df['Cued_Chosen']==1)]
+        df_uncued = df.loc[(df[mode] == num) & (df['Uncued_Chosen']==1)]
+        subs = df.Subject.unique()
+        subs.sort()
+        cued_percentage = pd.DataFrame(columns=[str(num) + '_cued_P1',str(num) + '_cued_P2',str(num) + '_cued_P3',str(num) + '_cued_P4'])
+        uncued_percentage = pd.DataFrame(columns=[str(num) + '_uncued_P1',str(num) + '_uncued_P2',str(num) + '_uncued_P3',str(num) + '_uncued_P4'])
+        for sub in subs:
+            for i,column in enumerate(cued_percentage.columns):
+                if len(df_cued.loc[(df_cued['option'] != 0) & (df_cued.Subject == sub)]) != 0:
+                    cued_percentage.at[sub,column] = (len(df_cued.loc[(df_cued.option == i + 1) & 
+                                                    (df_cued.Subject == sub)]))/(len(df_cued.loc[(df_cued['option'] != 0) & 
+                                                                                        (df_cued.Subject == sub)])) *100
+                elif len(df_cued.loc[(df_cued['option'] != 0) & (df_cued.Subject == sub)]) == 0:
+                    cued_percentage.at[sub,column] = 0
+            for i,column in enumerate(uncued_percentage.columns):
+                if len(df_uncued.loc[(df_uncued['option'] != 0) & (df_uncued.Subject == sub)]) != 0:
+                    uncued_percentage.at[sub,column] = (len(df_uncued.loc[(df_uncued.option == i + 1) & 
+                                                    (df_uncued.Subject == sub)]))/(len(df_uncued.loc[(df_uncued['option'] != 0) & 
+                                                                                        (df_uncued.Subject == sub)])) *100
+                elif len(df_uncued.loc[(df_uncued['option'] != 0) & (df_uncued.Subject == sub)]) == 0:
+                    uncued_percentage.at[sub,column] = 0
+        percentage = pd.concat([cued_percentage,uncued_percentage], axis = 1)
+          
+    else:
+        df1 = df.loc[df[mode] == num]
+        subs = df1.Subject.unique()
+        subs.sort()
+        percentage = pd.DataFrame(columns=[str(num) + 'P1',str(num) + 'P2',str(num) + 'P3',str(num) + 'P4'])
+        for sub in subs:
+            for i,column in enumerate(percentage.columns):
+                percentage.at[sub,column] = (len(df1.loc[(df1.option == i + 1) & 
+                                                (df1.Subject == sub)]))/(len(df1.loc[(df1['option'] != 0) & 
+                                                                                    (df1.Subject == sub)])) *100
     return percentage
 
-def get_sum_choice_all(df, mode = 'Session'):
+def get_sum_choice_all(df, mode = 'Session', task = None):
     df_sess = []
     for num in np.sort(df[mode].unique()):
-        df_sess.append(get_sum_choice(num,df,mode))
+        df_sess.append(get_sum_choice(num,df,mode, task = task))
     df1 = pd.concat(df_sess, axis=1)
-    for num in np.sort(df[mode].unique()):
-        df1['risk'+ str(num)] = df1[str(num)+'P1'] + df1[str(num)+'P2']- df1[str(num)+'P3'] - df1[str(num)+'P4']
+    if task == 'choiceRGT':
+        for num in np.sort(df[mode].unique()):
+            df1['risk_cued_'+ str(num)] = df1[str(num)+'_cued_P1'] + df1[str(num)+'_cued_P2']- df1[str(num)+'_cued_P3'] - df1[str(num)+'_cued_P4']
+            df1['risk_uncued_' + str(num)] = df1[str(num)+'_uncued_P1'] + df1[str(num)+'_uncued_P2']- df1[str(num)+'_uncued_P3'] - df1[str(num)+'_uncued_P4']
+    else:
+        for num in np.sort(df[mode].unique()):
+            df1['risk'+ str(num)] = df1[str(num)+'P1'] + df1[str(num)+'P2']- df1[str(num)+'P3'] - df1[str(num)+'P4']
     return df1
 
 def get_premature(df_raw,df_sum,mode = 'Session'):
