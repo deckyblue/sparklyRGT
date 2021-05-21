@@ -189,16 +189,35 @@ def get_premature(df_raw,df_sum,mode = 'Session'):
         df_sum['prem' + str(num)] = prem_resp.loc[prem_resp[mode]==num].set_index('Subject')['prem_percent']
     return df_sum
 
+# def get_preference_score(df_raw,df_sum,mode = 'Session'):
+#     uncued_picks = df_raw.groupby(['Subject', mode],as_index=False)['Uncued_Chosen'].sum()
+#     uncued_picks['cued_picks'] = df_raw.groupby(['Subject', mode],as_index=False)['Cued_Chosen'].sum()['Cued_Chosen']
+#     uncued_picks['pref_score'] = uncued_picks['cued_picks']/(uncued_picks['cued_picks'] + uncued_picks['Uncued_Chosen'])
+    
+#     for num in np.sort(df_raw[mode].unique()):
+#         df_sum['pref' + str(num)] = uncued_picks.loc[uncued_picks[mode]==num].set_index('Subject')['pref_score'] 
+#     return df_sum
+
 def get_latencies(df_raw,df_sum,mode = 'Session'):
     #extract collect and choice lat information
     df_raw = df_raw.loc[df_raw['Chosen'] != 0]
     df_raw2 = df_raw.loc[df_raw['Rewarded'] == 1]
+#     df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+#     df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+    
     collect_lat = df_raw2.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
     choice_lat = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
+#     uncued_lever_lat = df_uncued.groupby(['Subject',mode], as_index = False)['Lever_Latency'].mean()
+#     cued_lever_lat = df_cued.groupby(['Subject',mode], as_index = False)['Lever_Latency'].mean()
+    
     for num in np.sort(df_raw[mode].unique()):
         df_sum['collect_lat' + str(num)] = collect_lat.loc[collect_lat[mode]==num].set_index('Subject')['Collect_Lat']
     for num in np.sort(df_raw[mode].unique()):
         df_sum['choice_lat' + str(num)] = choice_lat.loc[choice_lat[mode]==num].set_index('Subject')['Choice_Lat']
+#     for num in np.sort(df_raw[mode].unique()):
+#         df_sum['uncued_lat' + str(num)] = uncued_lever_lat.loc[uncued_lever_lat[mode]==num].set_index('Subject')['Lever_Latency']
+#     for num in np.sort(df_raw[mode].unique()):
+#         df_sum['cued_lat' + str(num)] = cued_lever_lat.loc[cued_lever_lat[mode]==num].set_index('Subject')['Lever_Latency']
     return df_sum
 
 def get_omit(df_raw,df_sum,mode = 'Session'):
@@ -220,16 +239,27 @@ def get_trials_init(df_raw,df_sum,mode = 'Session'):
         df_sum['trial_init' + str(num)] = trials.loc[trials[mode]==num].set_index('Subject')['Trial']
     return df_sum
 
+
 #-------------------------------GET SUMMARY DATA--------------------------------#
 
 def get_summary_data(df_raw, mode = 'Session'):
-    df_raw = get_choices(df_raw)
-    df_sum = get_sum_choice_all(df_raw,mode)
-    df_sum = get_latencies(df_raw,df_sum,mode)
-    df_sum = get_omit(df_raw,df_sum,mode)
-    df_sum = get_trials(df_raw,df_sum,mode)
-    df_sum = get_premature(df_raw,df_sum,mode)
-    return df_sum
+#     if task == 'choiceRGT'
+#             df_raw = get_choices(df_raw)
+#             df_sum = get_sum_choice_all(df_raw,mode)
+#             df_sum = get_latencies(df_raw,df_sum,mode)
+#             df_sum = get_omit(df_raw,df_sum,mode)
+#             df_sum = get_trials(df_raw,df_sum,mode)
+#             df_sum = get_premature(df_raw,df_sum,mode)
+#             df_sum = get_preference_score(df_raw, df_sum, mode)
+#         return df_sum
+#     else: 
+            df_raw = get_choices(df_raw)
+            df_sum = get_sum_choice_all(df_raw,mode)
+            df_sum = get_latencies(df_raw,df_sum,mode)
+            df_sum = get_omit(df_raw,df_sum,mode)
+            df_sum = get_trials(df_raw,df_sum,mode)
+            df_sum = get_premature(df_raw,df_sum,mode)
+        return df_sum
 
 def impute_missing_data(df1, session = None, subject = None, choice = None, vars = None):
     if choice == 'all':
