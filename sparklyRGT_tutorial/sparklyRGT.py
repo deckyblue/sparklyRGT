@@ -155,6 +155,28 @@ def get_choices(df):
             df['option'][i] = 0 
     return df    
 
+def get_choices(df):
+    configA = np.array([1, 4, 0, 2, 3]) #this is the order for version A - i.e., hole 1 corresponds to P1
+    configB = np.array([4, 1, 0, 3, 2]) #this is the order for version B - i.e., hole 1 corresponds to P4
+
+    #I took the following code from someone else, so honestly I'm not entirely sure how it works haha
+    #the important thing is that it uses the configurations above to assign the correct option, 
+    #based on whether the MSN name contains 'A' or 'B'
+    df['option'] = df['MSN'].str.contains("B").values*configB[df['Chosen'].astype('int').ravel()-1].astype('int') + \
+        df['MSN'].str.contains("A").values*configA[df['Chosen'].astype('int').ravel()-1].astype('int')
+    
+    ###I can just take your word for it right? haha
+    ####Yes
+
+    #the above code changes any zero in the chosen column to a three in the option column - don't need to know why
+    #so we need to fix that (zeros represent either a premature response or an omission)
+    for i in range(len(df)): ##range gives me a list from 0 to the len(df), which should be all the indices
+        if df['Chosen'][i] == 0: ###can we say this in English? 
+            ##the same as df.at
+            ##if the index of the 'Chosen' column gets 0 --> option equals 0 
+            df['option'][i] = 0 
+    return df
+
 def get_sum_choice(num, df, mode = 'Session', task = None):
     #get choice information for given group number or session number
     if task == 'choiceRGT':
