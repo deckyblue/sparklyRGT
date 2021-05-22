@@ -220,7 +220,26 @@ def get_latencies(df_raw,df_sum,mode = 'Session'):
 #         df_sum['cued_lat' + str(num)] = cued_lever_lat.loc[cued_lever_lat[mode]==num].set_index('Subject')['Lever_Latency']
     return df_sum
 
-def get_omit(df_raw,df_sum,mode = 'Session'):
+def get_omit(df_raw,df_sum,mode = 'Session', task = None):
+    
+    if task == 'choiceRGT': 
+        df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+        df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+        
+        cued_omit = df_uncued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
+        uncued_omit = df_uncued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
+        
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['cued_omit_' + str(num)] = cued_omit.loc[cued_omit[mode]==num].set_index('Subject')['Omit']
+#         for num in np.sort(df_raw[mode].unique()):
+            df_sum['uncued_omit_' + str(num)] = uncued_omit.loc[uncued_omit[mode]==num].set_index('Subject')['Omit']
+
+        lev_omit = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Omit'].sum()
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['lev_omit' + str(num)] = lev_omit.loc[lev_omit[mode]==num].set_index('Subject')['Choice_Omit']
+        
+        return df_sum 
+    
     omit = df_raw.groupby(['Subject',mode],as_index=False)['Omit'].sum()
     for num in np.sort(df_raw[mode].unique()):
         df_sum['omit' + str(num)] = omit.loc[omit[mode]==num].set_index('Subject')['Omit']
