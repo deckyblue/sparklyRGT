@@ -242,7 +242,7 @@ def get_trials_init(df_raw,df_sum,mode = 'Session'):
 
 #-------------------------------GET SUMMARY DATA--------------------------------#
 
-def get_summary_data(df_raw, mode = 'Session'):
+def get_summary_data(df_raw, mode = 'Session', task = None):
 #     if task == 'choiceRGT'
 #             df_raw = get_choices(df_raw)
 #             df_sum = get_sum_choice_all(df_raw,mode)
