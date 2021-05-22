@@ -207,33 +207,66 @@ def get_sum_choice_all(df, mode = 'Session', task = None):
             df1['risk'+ str(num)] = df1[str(num)+'P1'] + df1[str(num)+'P2']- df1[str(num)+'P3'] - df1[str(num)+'P4']
     return df1
 
-def get_premature(df_raw,df_sum,mode = 'Session'):
+def get_premature(df_raw,df_sum,mode = 'Session', task = None):
     #extract premature response information on either group or session
-    prem_resp = df_raw.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
+    
+    if task == 'choiceRGT':
+        df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+        df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+        
+        prem_resp_cued = df_cued.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
+        prem_resp_cued['Trials'] = df_cued.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
+        prem_resp_cued['prem_percent'] = prem_resp_cued['Premature_Resp']/prem_resp_cued['Trials'] * 100
+        
+        prem_resp_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
+        prem_resp_uncued['Trials'] = df_uncued.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
+        prem_resp_uncued['prem_percent'] = prem_resp_uncued['Premature_Resp']/prem_resp_uncued['Trials'] * 100
 
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['prem_cued_' + str(num)] = prem_resp_cued.loc[prem_resp_cued[mode]==num].set_index('Subject')['prem_percent']
+            df_sum['prem_uncued_' + str(num)] = prem_resp_uncued.loc[prem_resp_uncued[mode]==num].set_index('Subject')['prem_percent']
+        return df_sum 
+    
+    prem_resp = df_raw.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
+    
     prem_resp['Trials'] = df_raw.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
 
     prem_resp['prem_percent'] = prem_resp['Premature_Resp']/prem_resp['Trials'] * 100
 
     for num in np.sort(df_raw[mode].unique()):
         df_sum['prem' + str(num)] = prem_resp.loc[prem_resp[mode]==num].set_index('Subject')['prem_percent']
+        
+
     return df_sum
 
 def get_latencies(df_raw,df_sum,mode = 'Session', task = None):
     #extract collect and choice lat information
-    df_raw = df_raw.loc[df_raw['Chosen'] != 0]
-    df_raw2 = df_raw.loc[df_raw['Rewarded'] == 1]
     
-    collect_lat = df_raw2.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
-    choice_lat = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
-   
-    
-    for num in np.sort(df_raw[mode].unique()):
-        df_sum['collect_lat' + str(num)] = collect_lat.loc[collect_lat[mode]==num].set_index('Subject')['Collect_Lat']
-    for num in np.sort(df_raw[mode].unique()):
-        df_sum['choice_lat' + str(num)] = choice_lat.loc[choice_lat[mode]==num].set_index('Subject')['Choice_Lat']
-        
     if task == 'choiceRGT':
+        #collect lat
+        df_cued = df_raw.loc[(df_raw['Rewarded'] == 1) & (df_raw['Cued_Chosen'] == 1)]
+        collect_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
+        for num in np.sort(df_cued[mode].unique()):
+            df_sum['co_lat_cued_' + str(num)] = collect_lat_cued.loc[collect_lat_cued[mode]==num].set_index('Subject')['Collect_Lat']
+        
+        df_uncued = df_raw.loc[(df_raw['Rewarded'] == 1) & (df_raw['Uncued_Chosen'] == 1)]
+        collect_lat_uncued = df_uncued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
+        for num in np.sort(df_uncued[mode].unique()):
+            df_sum['co_lat_uncued_' + str(num)] = collect_lat_uncued.loc[collect_lat_uncued[mode]==num].set_index('Subject')['Collect_Lat']
+            
+        #choice lat
+        df_cued = df_raw.loc[(df_raw['Chosen'] != 0) & (df_raw['Cued_Chosen'] == 1)]
+        choice_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
+        for num in np.sort(df_cued[mode].unique()):
+            df_sum['ch_lat_cued_' + str(num)] = choice_lat_cued.loc[choice_lat_cued[mode]==num].set_index('Subject')['Choice_Lat']
+        
+        df_uncued = df_raw.loc[(df_raw['Chosen'] != 0) & (df_raw['Uncued_Chosen'] == 1)]
+        choice_lat_uncued = df_uncued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
+        for num in np.sort(df_uncued[mode].unique()):
+            df_sum['ch_lat_uncued_' + str(num)] = choice_lat_uncued.loc[choice_lat_uncued[mode]==num].set_index('Subject')['Choice_Lat']
+        
+        
+        #lever latency
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
         
@@ -244,7 +277,21 @@ def get_latencies(df_raw,df_sum,mode = 'Session', task = None):
             df_sum['cued_lev_lat' + str(num)] = cued_lever_lat.loc[cued_lever_lat[mode]==num].set_index('Subject')['Lever_Latency']
 #         for num in np.sort(df_raw[mode].unique()):
             df_sum['uncued_lev_lat' + str(num)] = uncued_lever_lat.loc[uncued_lever_lat[mode]==num].set_index('Subject')['Lever_Latency']
-            
+        return df_sum
+    
+    df_raw = df_raw.loc[df_raw['Chosen'] != 0]
+    df_raw2 = df_raw.loc[df_raw['Rewarded'] == 1]    
+    
+    collect_lat = df_raw2.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
+    choice_lat = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
+   
+    
+    for num in np.sort(df_raw[mode].unique()):
+        df_sum['collect_lat' + str(num)] = collect_lat.loc[collect_lat[mode]==num].set_index('Subject')['Collect_Lat']
+    for num in np.sort(df_raw[mode].unique()):
+        df_sum['choice_lat' + str(num)] = choice_lat.loc[choice_lat[mode]==num].set_index('Subject')['Choice_Lat']
+        
+
     return df_sum
 
 def get_omit(df_raw,df_sum,mode = 'Session'):
@@ -253,7 +300,22 @@ def get_omit(df_raw,df_sum,mode = 'Session'):
         df_sum['omit' + str(num)] = omit.loc[omit[mode]==num].set_index('Subject')['Omit']
     return df_sum
 
-def get_trials(df_raw,df_sum,mode = 'Session'):
+def get_trials(df_raw,df_sum,mode = 'Session', task = None):
+    if task == 'choiceRGT':
+        df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+            
+        trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+        for num in np.sort(df_cued[mode].unique()):
+            df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
+            
+        df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+            
+        trials_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+        for num in np.sort(df_uncued[mode].unique()):
+            df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
+        return df_sum
+        
+        
     trials = df_raw.groupby(['Subject', mode],as_index=False)['Trial'].max()
     for num in np.sort(df_raw[mode].unique()):
         df_sum['trial' + str(num)] = trials.loc[trials[mode]==num].set_index('Subject')['Trial']
