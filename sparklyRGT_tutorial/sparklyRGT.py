@@ -267,26 +267,22 @@ def get_latencies(df_raw,df_sum,mode = 'Session', task = None):
     if task == 'choiceRGT':
         #collect lat
         df_cued = df_raw.loc[(df_raw['Rewarded'] == 1) & (df_raw['Cued_Chosen'] == 1)]
-        collect_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
-        for num in np.sort(df_cued[mode].unique()):
-            df_sum['co_lat_cued_' + str(num)] = collect_lat_cued.loc[collect_lat_cued[mode]==num].set_index('Subject')['Collect_Lat']
-        
         df_uncued = df_raw.loc[(df_raw['Rewarded'] == 1) & (df_raw['Uncued_Chosen'] == 1)]
         collect_lat_uncued = df_uncued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
-        for num in np.sort(df_uncued[mode].unique()):
+        collect_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
+    
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['co_lat_cued_' + str(num)] = collect_lat_cued.loc[collect_lat_cued[mode]==num].set_index('Subject')['Collect_Lat']
             df_sum['co_lat_uncued_' + str(num)] = collect_lat_uncued.loc[collect_lat_uncued[mode]==num].set_index('Subject')['Collect_Lat']
             
         #choice lat
         df_cued = df_raw.loc[(df_raw['Chosen'] != 0) & (df_raw['Cued_Chosen'] == 1)]
-        choice_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
-        for num in np.sort(df_cued[mode].unique()):
-            df_sum['ch_lat_cued_' + str(num)] = choice_lat_cued.loc[choice_lat_cued[mode]==num].set_index('Subject')['Choice_Lat']
-        
         df_uncued = df_raw.loc[(df_raw['Chosen'] != 0) & (df_raw['Uncued_Chosen'] == 1)]
         choice_lat_uncued = df_uncued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
-        for num in np.sort(df_uncued[mode].unique()):
+        choice_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['ch_lat_cued_' + str(num)] = choice_lat_cued.loc[choice_lat_cued[mode]==num].set_index('Subject')['Choice_Lat']
             df_sum['ch_lat_uncued_' + str(num)] = choice_lat_uncued.loc[choice_lat_uncued[mode]==num].set_index('Subject')['Choice_Lat']
-        
         
         #lever latency
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
@@ -343,16 +339,27 @@ def get_omit(df_raw,df_sum,mode = 'Session', task = None):
 
 def get_trials(df_raw,df_sum,mode = 'Session', task = None):
     if task == 'choiceRGT':
+#         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+            
+#         trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+#         for num in np.sort(df_cued[mode].unique()):
+#             df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
+            
+#         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+            
+#         trials_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+#         for num in np.sort(df_uncued[mode].unique()):
+#             df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
+#         return df_sum
+
         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
-            
-        trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
-        for num in np.sort(df_cued[mode].unique()):
-            df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
-            
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
-            
+        
         trials_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Trial'].max()
-        for num in np.sort(df_uncued[mode].unique()):
+        trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+        
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
             df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
         return df_sum
         
