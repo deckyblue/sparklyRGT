@@ -255,6 +255,7 @@ def get_premature(df_raw,df_sum,mode = 'Session', task = None):
         for num in np.sort(df_raw[mode].unique()):
             df_sum['prem_cued_' + str(num)] = prem_resp_cued.loc[prem_resp_cued[mode]==num].set_index('Subject')['prem_percent']
             df_sum['prem_uncued_' + str(num)] = prem_resp_uncued.loc[prem_resp_uncued[mode]==num].set_index('Subject')['prem_percent']
+        print(prem_resp_cued)
         return df_sum 
     
     prem_resp = df_raw.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
@@ -326,7 +327,7 @@ def get_omit(df_raw,df_sum,mode = 'Session', task = None):
         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
         
-        cued_omit = df_uncued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
+        cued_omit = df_cued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
         uncued_omit = df_uncued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
         
         for num in np.sort(df_raw[mode].unique()):
