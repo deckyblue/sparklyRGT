@@ -327,18 +327,27 @@ def get_omit(df_raw,df_sum,mode = 'Session', task = None):
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
         
         cued_omit = df_cued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
+        cued_omit['Trials'] = df_cued.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
+        cued_omit['omit_percent'] = cued_omit['Omit']/cued_omit['Trials'] * 100
+        
         uncued_omit = df_uncued.groupby(['Subject',mode], as_index = False)['Omit'].sum()
+        uncued_omit['Trials'] = df_uncued.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
+        uncued_omit['omit_percent'] = uncued_omit['Omit']/uncued_omit['Trials'] * 100
+        
+        lev_omit = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Omit'].sum()
+        lev_omit['Trials'] = df_raw.groupby(['Subject',mode],as_index=False)['Trial'].count()['Trial']
+        lev_omit['lev_omit_percent'] = lev_omit['Choice_Omit']/lev_omit['Trials'] * 100
         
         for num in np.sort(df_raw[mode].unique()):
-            df_sum['cued_omit_' + str(num)] = cued_omit.loc[cued_omit[mode]==num].set_index('Subject')['Omit']
-#         for num in np.sort(df_raw[mode].unique()):
-            df_sum['uncued_omit_' + str(num)] = uncued_omit.loc[uncued_omit[mode]==num].set_index('Subject')['Omit']
-
-        lev_omit = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Omit'].sum()
-        for num in np.sort(df_raw[mode].unique()):
-            df_sum['lev_omit' + str(num)] = lev_omit.loc[lev_omit[mode]==num].set_index('Subject')['Choice_Omit']
+            df_sum['cued_omit_' + str(num)] = cued_omit.loc[cued_omit[mode]==num].set_index('Subject')['omit_percent']
+            df_sum['uncued_omit_' + str(num)] = uncued_omit.loc[uncued_omit[mode]==num].set_index('Subject')['omit_percent']
+            df_sum['lev_omit' + str(num)] = lev_omit.loc[lev_omit[mode]==num].set_index('Subject')['lev_omit_percent']
         
         return df_sum 
+    
+    
+#         lev_omit = df_raw.groupby(['Subject',mode],as_index=False)['Choice_Omit'].sum()
+#         for num in np.sort(df_raw[mode].unique()):
     
     omit = df_raw.groupby(['Subject',mode],as_index=False)['Omit'].sum()
     for num in np.sort(df_raw[mode].unique()):
@@ -347,6 +356,10 @@ def get_omit(df_raw,df_sum,mode = 'Session', task = None):
 
 def get_trials(df_raw,df_sum,mode = 'Session', task = None):
     if task == 'choiceRGT':
+        trials = df_raw.groupby(['Subject',mode],as_index=False)['Trial'].count()
+        for num in np.sort(df_raw[mode].unique()):
+            df_sum['trial_init' + str(num)] = trials.loc[trials[mode]==num].set_index('Subject')['Trial']
+        return df_sum
 #         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
             
 #         trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
@@ -360,16 +373,19 @@ def get_trials(df_raw,df_sum,mode = 'Session', task = None):
 #             df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
 #         return df_sum
 
-        df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
-        df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
+# ---
+
+#         df_cued = df_raw.loc[df_raw['Cued_Chosen'] == 1]
+#         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
         
-        trials_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Trial'].max()
-        trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
-        
-        for num in np.sort(df_raw[mode].unique()):
-            df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
-            df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
-        return df_sum
+#         trials_uncued = df_uncued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+#         trials_cued = df_cued.groupby(['Subject', mode],as_index=False)['Trial'].max()
+
+#         for num in np.sort(df_raw[mode].unique()):
+#             df_sum['trial_cued_' + str(num)] = trials_cued.loc[trials_cued[mode]==num].set_index('Subject')['Trial']
+#             df_sum['trial_uncued_' + str(num)] = trials_uncued.loc[trials_uncued[mode]==num].set_index('Subject')['Trial']
+            
+#         return df_sum
         
         
     trials = df_raw.groupby(['Subject', mode],as_index=False)['Trial'].max()
@@ -387,7 +403,7 @@ def get_trials_init(df_raw,df_sum,mode = 'Session'):
 def get_preference_score(df_raw,df_sum,mode = 'Session'):
     uncued_picks = df_raw.groupby(['Subject', mode],as_index=False)['Uncued_Chosen'].sum()
     uncued_picks['cued_picks'] = df_raw.groupby(['Subject', mode],as_index=False)['Cued_Chosen'].sum()['Cued_Chosen']
-    uncued_picks['pref_score'] = uncued_picks['cued_picks']/(uncued_picks['cued_picks'] + uncued_picks['Uncued_Chosen'])
+    uncued_picks['pref_score'] = uncued_picks['cued_picks']/(uncued_picks['cued_picks'] + uncued_picks['Uncued_Chosen']) * 100
     
     for num in np.sort(df_raw[mode].unique()):
         df_sum['pref' + str(num)] = uncued_picks.loc[uncued_picks[mode]==num].set_index('Subject')['pref_score'] 
