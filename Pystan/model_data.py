@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 
-def model_data(fnames,cue,condition,numsessions):
+def get_model_data(fnames,numsessions, subjects, reset_sessions = True):
     #fnames is a list of strings with the full file locations for each dataset to be loaded in
-    df_all = load_data(fnames)
-    df = extract_data(df_all,cue,condition,numsessions)
+    df_all = load_multiple_data(fnames, reset_sessions = reset_sessions)
+    df = extract_data(df_all, numsessions, subjects)
     df = get_options(df)
     startSubject = start_subject(df)
     startSession = start_session(df)
@@ -12,28 +12,40 @@ def model_data(fnames,cue,condition,numsessions):
     return model_data
     
     
-def load_data(fnames): 
-#load dataset from computer and redo subject numbers
+def load_multiple_data(fnames, reset_sessions=False): 
+#load multiple datasets from computer and redo subject numbers (for multiple cohorts) 
     for i,file in enumerate(fnames):
         if i == 0:
-            df = pd.read_csv(fnames[i])
-            df['Subject'] += 100
+            df = pd.read_excel(fnames[i])
+            df['Subject'] += 100 #rat 1 becomes rat 101
+            if reset_sessions:
+                for i,session in enumerate(df.Session.unique()):
+                    for j in range(len(df)):
+                        if df.at[j,'Session'] == session:
+                            df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_csv(fnames[i])
-            df2['Subject'] += 100 * (1+i)
+            df2 = pd.read_excel(fnames[i])
+            df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc. 
+            if reset_sessions:
+                for i,session in enumerate(df2.Session.unique()):
+                    for j in range(len(df2)):
+                        if df2.at[j,'Session'] == session:
+                            df2.at[j,'Session'] = i + 1
             df = df.append(df2, ignore_index = True)
     return df
 
 
-def extract_data(df, cue, condition, numsessions):
+def extract_data(df, numsessions, subjects):
+    "take the data for subjects in subjects list from the same condition (task, drug, etc.) for the specified number of sessions"
 #take only columns needed
-    df = df.loc[:, ['Subject','Session','Trial','Pellets','Chosen','Pun_Dur','Cue', 'Condition','Choice']]
+    df = df.loc[:, ['Subject','Session','Trial','Pellets','Chosen','Pun_Dur','Option']]
 #extract specified data
 #extract the number of sessions specified above (numsessions)
     df_small = df.loc[df['Session'] < min(df.Session) + numsessions]
 
-#extract the conditions specified above
-    df = df_small.loc[np.logical_and(df_small['Cue'] == cue, df_small['Condition'] == condition)]
+#extract the conditions based on given list of subject numbers
+   #df = df_small.loc[np.logical_and(df_small['Cue'] == cue, df_small['Condition'] == condition)]
+    df = df_small[df_small['Subjects'].isin(subjects)]
     
     #sort dataset by subject and then session
     df = df.sort_values(by=['Subject', 'Session'], ignore_index = True)
@@ -41,14 +53,28 @@ def extract_data(df, cue, condition, numsessions):
     return df
 
 
+def get_choices(df):
+    configA = np.array([1, 4, 0, 2, 3]) #this is the order for version A - i.e., hole 1 corresponds to P1
+    configB = np.array([4, 1, 0, 3, 2]) #this is the order for version B - i.e., hole 1 corresponds to P4
 
-def get_options(df):
-#Numerical options column
-    df['Option'] = 0
-    for i in range(len(df)):
-        if isinstance(df['Choice'][i], str):
-            df['Option'][i] = int(df['Choice'][i][1])
-    return df
+    #I took the following code from someone else, so honestly I'm not entirely sure how it works haha
+    #the important thing is that it uses the configurations above to assign the correct option, 
+    #based on whether the MSN name contains 'A' or 'B'
+    df['Option'] = df['MSN'].str.contains("B").values*configB[df['Chosen'].astype('int').ravel()-1].astype('int') + \
+        df['MSN'].str.contains("A").values*configA[df['Chosen'].astype('int').ravel()-1].astype('int')
+    
+    ###I can just take your word for it right? haha
+    ####Yes
+
+    #the above code changes any zero in the chosen column to a three in the option column - don't need to know why
+    #so we need to fix that (zeros represent either a premature response or an omission)
+    for i in range(len(df)): ##range gives me a list from 0 to the len(df), which should be all the indices
+        if df['Chosen'][i] == 0: ###can we say this in English? 
+            ##the same as df.at
+            ##if the index of the 'Chosen' column gets 0 --> option equals 0 
+            df['Option'][i] = 0 
+    return df    
+
 
 
 def start_subject(df):
