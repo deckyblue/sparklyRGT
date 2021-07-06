@@ -58,11 +58,11 @@ def load_multiple_data(fnames, reset_sessions=False):
         if i == 0:
             df = pd.read_excel(fnames[i])
             df['Subject'] += 100 #rat 1 becomes rat 101
-            if reset_sessions:
-                for i,session in enumerate(df.Session.unique()):
-                    for j in range(len(df)):
-                        if df.at[j,'Session'] == session:
-                            df.at[j,'Session'] = i + 1
+#             if reset_sessions:
+#                 for i,session in enumerate(df.Session.unique()):
+#                     for j in range(len(df)):
+#                         if df.at[j,'Session'] == session:
+#                             df.at[j,'Session'] = i + 1
         else:
             df2 = pd.read_excel(fnames[i])
             df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc. 
