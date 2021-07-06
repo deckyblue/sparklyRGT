@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
 
-def get_model_data(fnames,numsessions, subjects, reset_sessions = True):
-    #fnames is a list of strings with the full file locations for each dataset to be loaded in
-    df_all = load_multiple_data(fnames, reset_sessions = reset_sessions)
-    df = extract_data(df_all, numsessions, subjects)
-    df = get_options(df) ## get_choices***
+def get_model_data(df,numsessions, subjects):
+    df = get_choices(df) 
+    df = extract_data(df, numsessions, subjects)
     startSubject = start_subject(df)
     startSession = start_session(df)
     model_data = get_data_dict(df, startSubject, startSession)
@@ -52,22 +50,6 @@ def extract_data(df, numsessions, subjects):
     
     return df
 
-def extract_data_chosen(df, numsessions, subjects):
-    "take the data for subjects in subjects list from the same condition (task, drug, etc.) for the specified number of sessions"
-#take only columns needed
-    df = df.loc[:, ['Subject','Session','Trial','Pellets','Chosen','Pun_Dur','Chosen']]
-#extract specified data
-#extract the number of sessions specified above (numsessions)
-    df_small = df.loc[df['Session'] < min(df.Session) + numsessions]
-
-#extract the conditions based on given list of subject numbers
-   #df = df_small.loc[np.logical_and(df_small['Cue'] == cue, df_small['Condition'] == condition)]
-    df = df_small[df_small['Subjects'].isin(subjects)]
-    
-    #sort dataset by subject and then session
-    df = df.sort_values(by=['Subject', 'Session'], ignore_index = True)
-    
-    return df
 
 
 def get_choices(df):
