@@ -170,8 +170,8 @@ def get_sum_choice(num, df, mode = 'Session', task = None):
         df_uncued = df.loc[(df[mode] == num) & (df['Uncued_Chosen']==1)]
         subs = df.Subject.unique()
         subs.sort()
-        cued_percentage = pd.DataFrame(columns=[str(num) + '_cued_P1',str(num) + '_cued_P2',str(num) + '_cued_P3',str(num) + '_cued_P4'])
-        uncued_percentage = pd.DataFrame(columns=[str(num) + '_uncued_P1',str(num) + '_uncued_P2',str(num) + '_uncued_P3',str(num) + '_uncued_P4'])
+        cued_percentage = pd.DataFrame(columns=[str(num) + 'P1_C',str(num) + 'P2_C',str(num) + 'P3_C',str(num) + 'P4_C'])
+        uncued_percentage = pd.DataFrame(columns=[str(num) + 'P1_U',str(num) + 'P2_U',str(num) + 'P3_U',str(num) + 'P4_U'])
         for sub in subs:
             for i,column in enumerate(cued_percentage.columns):
                 if len(df_cued.loc[(df_cued['option'] != 0) & (df_cued.Subject == sub)]) != 0:
@@ -208,8 +208,9 @@ def get_sum_choice_all(df, mode = 'Session', task = None):
     df1 = pd.concat(df_sess, axis=1)
     if task == 'choiceRGT':
         for num in np.sort(df[mode].unique()):
-            df1['risk_cued_'+ str(num)] = df1[str(num)+'_cued_P1'] + df1[str(num)+'_cued_P2']- df1[str(num)+'_cued_P3'] - df1[str(num)+'_cued_P4']
-            df1['risk_uncued_' + str(num)] = df1[str(num)+'_uncued_P1'] + df1[str(num)+'_uncued_P2']- df1[str(num)+'_uncued_P3'] - df1[str(num)+'_uncued_P4']
+            df1['risk_cued_'+ str(num)] = df1[str(num)+'P1_C'] + df1[str(num)+'P2_C']- df1[str(num)+'P3_C'] - df1[str(num)+'P4_C']
+        for num in np.sort(df[mode].unique()):
+            df1['risk_uncued_' + str(num)] = df1[str(num)+'P1_U'] + df1[str(num)+'P2_U']- df1[str(num)+'P3_U'] - df1[str(num)+'P4_U']
     else:
         for num in np.sort(df[mode].unique()):
             df1['risk'+ str(num)] = df1[str(num)+'P1'] + df1[str(num)+'P2']- df1[str(num)+'P3'] - df1[str(num)+'P4']
@@ -575,9 +576,12 @@ def rgt_bar_plot(variable,startsess,endsess,title,scores,sem, group_names = None
     ax.legend()
         
         
-def choice_bar_plot(startsess, endsess, scores, sem):
+def choice_bar_plot(startsess, endsess, scores, sem, task = None):
     sess = list(range(startsess,endsess + 1))
-    labels = ['P1','P2','P3','P4']
+    if task == 'choiceRGT':
+        labels = ['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U']
+    else:
+        labels = ['P1','P2','P3','P4']
     df = pd.DataFrame()
     df1 = pd.DataFrame()
 
