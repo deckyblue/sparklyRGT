@@ -43,7 +43,7 @@ def extract_data(df, numsessions, subjects):
 
 #extract the conditions based on given list of subject numbers
    #df = df_small.loc[np.logical_and(df_small['Cue'] == cue, df_small['Condition'] == condition)]
-    df = df_small[df_small['Subjects'].isin(subjects)]
+    df = df_small[df_small['Subject'].isin(subjects)]
     
     #sort dataset by subject and then session
     df = df.sort_values(by=['Subject', 'Session'], ignore_index = True)
@@ -128,13 +128,15 @@ def start_session(df):
 
 def get_data_dict(df,startSubject, startSession):
 #extract variables from df
-    N = len(df.Subject.unique())
-    ntr = len(df)
+    N = int(len(df.Subject.unique()))
+    ntr = int(len(df))
 
-    C = list(df.Chosen)
-    R = list(df.Pellets)
-    P = list(df.Pun_Dur)
-    O = list(df.Option)
+    C = list([int(i) for i in df.Chosen])
+    R = list([int(i) for i in df.Pellets])
+    P = list([int(i) for i in df.Pun_Dur])
+    O = list([int(i) for i in df.Option])
+    startSubject = [int(i) for i in startSubject]
+    startSession = [int(i) for i in startSession]
 
     #save them in dictionary
     model_data = {'N': N, 
