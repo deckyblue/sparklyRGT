@@ -14,7 +14,7 @@ import xarray as xr
 numsessions = 5
 
 
-fnames = ['BH09_raw-free_S1-5.xlsx','CH02_raw-free_S8-15.xlsx','NA01_raw_free-choice_S8-18.xlsx','CH01_raw-free_S8-19.xlsx']
+fnames = ['BH09_raw-free_S1-5_corrected.xlsx','CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx',"CH01_corrected.xlsx"]
 #change these to the names of the excel files that you want to run modeling on 
 
 
