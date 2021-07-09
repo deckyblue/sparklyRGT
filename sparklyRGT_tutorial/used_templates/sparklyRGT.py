@@ -553,8 +553,8 @@ def rgt_bar_plot(variable,startsess,endsess,title,scores,sem, group_names = None
     plt.rcParams.update({'font.size': 18}) 
     plt.rcParams["figure.figsize"] = (15,8)
     
-    bars = [0,0,0,0,0]
-    err = [0,0,0,0,0]
+    bars = [0]*len(scores.index)
+    err = [0]*len(scores.index)
     sess = [variable + str(s) for s in list(range(startsess,endsess+1))]
     for i,group in enumerate(scores.index):
         bars[i] = scores.loc[group, [col for col in scores.columns if col in sess]].mean()
