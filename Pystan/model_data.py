@@ -8,6 +8,35 @@ def get_model_data(df,numsessions, subjects):
     startSession = start_session(df)
     model_data = get_data_dict(df, startSubject, startSession)
     return model_data
+
+
+def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> load_data runs like normal 
+#load data from computer
+    for i,file in enumerate(fnames):
+        if i == 0:
+            df = pd.read_excel(fnames[i])
+#             df.dropna(how = 'all', inplace = True)
+#             df.reset_index(drop=True, inplace = True)
+#             df['Session'] = df['Session'].astype(int)
+#             df['Subject'] = df['Subject'].astype(int)
+            if reset_sessions:
+                for i,session in enumerate(df.Session.unique()):
+                    for j in range(len(df)):
+                        if df.at[j,'Session'] == session:
+                            df.at[j,'Session'] = i + 1
+        else:
+            df2 = pd.read_excel(fnames[i])
+#             df.dropna(how = 'all', inplace = True)
+#             df.reset_index(drop=True, inplace = True)
+#             df['Session'] = df['Session'].astype(int)
+#             df['Subject'] = df['Subject'].astype(int)
+            if reset_sessions:
+                for i,session in enumerate(df2.Session.unique()):
+                    for j in range(len(df2)):
+                        if df2.at[j,'Session'] == session:
+                            df2.at[j,'Session'] = i + 1
+            df = df.append(df2, ignore_index = True)
+    return df
     
     
 def load_multiple_data(fnames, reset_sessions=False): 
@@ -16,11 +45,11 @@ def load_multiple_data(fnames, reset_sessions=False):
         if i == 0:
             df = pd.read_excel(fnames[i])
             df['Subject'] += 100 #rat 1 becomes rat 101
-            if reset_sessions:
-                for i,session in enumerate(df.Session.unique()):
-                    for j in range(len(df)):
-                        if df.at[j,'Session'] == session:
-                            df.at[j,'Session'] = i + 1
+#             if reset_sessions:
+#                 for i,session in enumerate(df.Session.unique()):
+#                     for j in range(len(df)):
+#                         if df.at[j,'Session'] == session:
+#                             df.at[j,'Session'] = i + 1
         else:
             df2 = pd.read_excel(fnames[i])
             df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc. 
