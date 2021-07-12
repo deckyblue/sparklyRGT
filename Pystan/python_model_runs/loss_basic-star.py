@@ -47,8 +47,7 @@ task_list = df.groupby(['MSN'])['Subject'].unique()
 #and version B together) - based on unique string for each task name
 
 ##change between model runs
-subs = np.concatenate((np.concatenate(task_list[[task for task in df.MSN.unique() if 'Mis' in task]]),
-                       np.concatenate(task_list[[task for task in df.MSN.unique() if 'Rev' in task]])))
+subs = np.concatenate(task_list[[task for task in df.MSN.unique() if 'oss' in task]])
 
 #---------------------------------------------
 
@@ -57,8 +56,8 @@ subs = np.concatenate((np.concatenate(task_list[[task for task in df.MSN.unique(
 model_data = md.get_model_data(df, numsessions, subs)
 
 #stan code
-
-basic_model = """
+##identify the model 
+basic_star_model = """
   // rGT task -- basic RL model
 
   data {
@@ -81,13 +80,12 @@ basic_model = """
   parameters{
 
     // Group level parameters - beta, etaPos, etaNeg, pscale, pintercept
-    vector[4] mu_pr;
-    vector<lower=0>[4] sigma;
+    vector[3] mu_pr;
+    vector<lower=0>[3] sigma;
 
     // Subject-level parameters (raw; these are unit normal for equal density sampling across each par)
     vector[N] beta_samp;
-    vector[N] etaPositive_samp;
-    vector[N] etaNegative_samp;
+    vector[N] eta_samp;
     vector[N] m_samp;
 
   } // parameters
@@ -96,15 +94,13 @@ basic_model = """
 
       // Subject-level parameters (transformed)
       vector<lower=0,upper=100>[N]    beta;
-      vector<lower=0,upper=1>[N]     etaPositive;
-      vector<lower=0,upper=1>[N]     etaNegative;
+      vector<lower=0,upper=1>[N]     eta;
       vector[N]    m;
 
       for (i in 1:N) {
           beta[i]  = Phi_approx( mu_pr[1] + sigma[1] * beta_samp[i] ) * 100;
-          etaPositive[i] = Phi_approx( mu_pr[2] + sigma[2] * etaPositive_samp[i] );
-          etaNegative[i] = Phi_approx( mu_pr[3] + sigma[3] * etaNegative_samp[i] );
-          m[i]  = mu_pr[4] + sigma[4] * m_samp[i];
+          eta[i] = Phi_approx( mu_pr[2] + sigma[2] * eta_samp[i] );
+          m[i]  = mu_pr[3] + sigma[3] * m_samp[i];
       }
 
   } // transformed parameters
@@ -117,8 +113,7 @@ basic_model = """
 
     // Subject-level priors - these are for the sampled parameters
     beta_samp ~ normal(0, 1);
-    etaPositive_samp ~ normal(0, 1);
-    etaNegative_samp ~ normal(0, 1);
+    eta_samp ~ normal(0, 1);
     m_samp ~ normal(0, 1);
 
 
@@ -160,13 +155,13 @@ basic_model = """
             if ( R[tr]>0 ) {
               delta = R[tr] - Q[O[tr]];
               // learn from the positive outcome
-              Q[O[tr]] += etaPositive[currentSubject] * delta;
+              Q[O[tr]] += eta[currentSubject] * delta;
             }
             // if negative outcome
             if ( P[tr]>0 ) {
               delta = -m[currentSubject]*P[tr] - Q[O[tr]];
               // learn from the negative outcome
-              Q[O[tr]] += etaNegative[currentSubject] * delta;
+              Q[O[tr]] += eta[currentSubject] * delta;
             }
 
           } // if valid choice
@@ -178,11 +173,11 @@ basic_model = """
 """
 
 #compile stan code
-##change model if needed 
-model = stan.build(basic_model, data = model_data, random_seed=1)
+##change model argument if needed 
+model = stan.build(basic_star_model, data = model_data, random_seed=1)
 
 #do the sampling
 fit = model.sample(num_chains=4)
 fit_az = az.from_pystan(fit)
 ##change argument (task_model_fit.nc)
-fit_az.to_netcdf('reverse_basic_fit.nc')
+fit_az.to_netcdf('loss_basic-star_fit.nc')

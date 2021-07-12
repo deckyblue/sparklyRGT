@@ -2,6 +2,7 @@ import stan #install pystan using pip first
 import model_data as md 
 import pandas as pd
 import numpy as np
+pd.options.mode.chained_assignment = None
 
 #arviz is for visualization of stan output
 import arviz as az #install using pip first
@@ -176,13 +177,11 @@ basic_model = """
 """
 
 #compile stan code
-##change name of object to reflect the task we are modelling
-outcome_basic = stan.build(basic_model, data = model_data, random_seed=1)
+##change model if needed 
+model = stan.build(basic_model, data = model_data, random_seed=1)
 
 #do the sampling
-##change names of objects to reflect task, and the sample code
-outcome_basic_fit = outcome_basic.sample(num_chains=4)
-##change object name and argument
-outcome_basic_az = az.from_pystan(outcome_basic_fit)
-##change object name and argument
-outcome_basic_az.to_netcdf('outcome_basic_fit.nc')
+fit = model.sample(num_chains=4)
+fit_az = az.from_pystan(fit)
+##change argument (task_model_fit.nc)
+fit_az.to_netcdf('outcome_basic_fit.nc')
