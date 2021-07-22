@@ -1,0 +1,7 @@
+            df1['risk_uncued_' + str(num)] = df1[str(num)+'P1_U'] + df1[str(num)+'P2_U']- df1[str(num)+'P3_U'] - df1[str(num)+'P4_U']
+        uncued_percentage = pd.DataFrame(columns=[str(num) + 'P1_U',str(num) + 'P2_U',str(num) + 'P3_U',str(num) + 'P4_U'])
+        labels = ['P1','P2','P3','P4']
+        cued_percentage = pd.DataFrame(columns=[str(num) + 'P1_C',str(num) + 'P2_C',str(num) + 'P3_C',str(num) + 'P4_C'])
+            df1['risk_cued_'+ str(num)] = df1[str(num)+'P1_C'] + df1[str(num)+'P2_C']- df1[str(num)+'P3_C'] - df1[str(num)+'P4_C']
+def choice_bar_plot(startsess, endsess, scores, sem, task = None):
+        labels = ['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U']

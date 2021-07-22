@@ -637,4 +637,3 @@ def ls_bar_plot(figure_group, group_means, sem):
     ax.spines['left'].set_linewidth(2)
     ax.spines['bottom'].set_linewidth(2)
     ax.legend()
-    
