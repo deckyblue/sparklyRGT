@@ -423,13 +423,13 @@ def impute_missing_data(df1, session = None, subject = None, choice = None, vars
 
 #--------------------------------GET RISK STATUS-------------------------------#
 
-def get_risk_status(df_sum, startsess, endsess):
+def get_risk_status(df_sum, startsess, endsess, task = None):
     #get risk status from specified sessions
     #create lists for indexing based on risk status
     risky = []
     optimal = []
-    startsess = 'risk' + str(startsess)
-    endsess = 'risk' + str(endsess)
+    startsess = 'risk_cued' + str(startsess)
+    endsess = 'risk_cued' + str(endsess)
     #calculate the mean risk score from the specified sessions
     df_sum['mean_risk'] = df_sum.loc[:,startsess:endsess].mean(axis=1) ###did this create a 'mean_risk' column?
     for sub in df_sum.index: #for each subject
