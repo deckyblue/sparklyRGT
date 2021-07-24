@@ -170,8 +170,8 @@ def get_sum_choice(num, df, mode = 'Session', task = None):
         df_uncued = df.loc[(df[mode] == num) & (df['Uncued_Chosen']==1)]
         subs = df.Subject.unique()
         subs.sort()
-        cued_percentage = pd.DataFrame(columns=[str(num) + 'P1_C',str(num) + 'P2_C',str(num) + 'P3_C',str(num) + 'P4_C'])
-        uncued_percentage = pd.DataFrame(columns=[str(num) + 'P1_U',str(num) + 'P2_U',str(num) + 'P3_U',str(num) + 'P4_U'])
+        cued_percentage = pd.DataFrame(columns=[str(num) + '_cued_P1',str(num) + '_cued_P2',str(num) + '_cued_P3',str(num) + '_cued_P4'])
+        uncued_percentage = pd.DataFrame(columns=[str(num) + '_uncued_P1',str(num) + '_uncued_P2',str(num) + '_uncued_P3',str(num) + '_uncued_P4'])
         for sub in subs:
             for i,column in enumerate(cued_percentage.columns):
                 if len(df_cued.loc[(df_cued['option'] != 0) & (df_cued.Subject == sub)]) != 0:
@@ -196,9 +196,12 @@ def get_sum_choice(num, df, mode = 'Session', task = None):
         percentage = pd.DataFrame(columns=[str(num) + 'P1',str(num) + 'P2',str(num) + 'P3',str(num) + 'P4'])
         for sub in subs:
             for i,column in enumerate(percentage.columns):
-                percentage.at[sub,column] = (len(df1.loc[(df1.option == i + 1) & 
-                                                (df1.Subject == sub)]))/(len(df1.loc[(df1['option'] != 0) & 
-                                                                                    (df1.Subject == sub)])) *100
+                if len(df1.loc[(df1['option'] != 0) & (df1.Subject == sub)]) == 0:
+                    percentage.at[sub,column] = 0
+                else:
+                    percentage.at[sub,column] = (len(df1.loc[(df1.option == i + 1) & 
+                                                    (df1.Subject == sub)]))/(len(df1.loc[(df1['option'] != 0) & 
+                                                                                        (df1.Subject == sub)])) *100
     return percentage
 
 def get_sum_choice_all(df, mode = 'Session', task = None):
@@ -428,8 +431,8 @@ def get_risk_status(df_sum, startsess, endsess, task = None):
     #create lists for indexing based on risk status
     risky = []
     optimal = []
-    startsess = 'risk_cued' + str(startsess)
-    endsess = 'risk_cued' + str(endsess)
+    startsess = 'risk' + str(startsess)
+    endsess = 'risk' + str(endsess)
     #calculate the mean risk score from the specified sessions
     df_sum['mean_risk'] = df_sum.loc[:,startsess:endsess].mean(axis=1) ###did this create a 'mean_risk' column?
     for sub in df_sum.index: #for each subject
@@ -528,19 +531,28 @@ def rgt_plot(variable,startsess,endsess,title,scores,sem, group_names = None, hi
     ax.spines['bottom'].set_linewidth(2)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.set_xticks(np.arange(startsess,endsess+1))
-
+    
+    #define x axis (range of session numbers we are graphing)
     x=np.arange(startsess,endsess+1)
-   
+    #extract column names to include in figure
+    columns = []
+    for col in scores.columns:
+        for session_number in [str(i) for i in x]: #turns session numbers in x into strings
+            #check if variable name is in column name and column name ends with last letter of variable name + session number
+            if variable in col and col.endswith(variable[-1] + session_number):
+                #if so, append column name to columns list
+                columns.append(col)
+
     if group_names == None:
-        y = scores.loc['All rats',variable+str(startsess):variable+str(endsess)]
+        y = scores.loc['All rats',columns]
         plt.errorbar(x, y,
-                     yerr = sem.loc['All rats',variable+str(startsess):variable+str(endsess)], 
+                     yerr = sem.loc['All rats',columns], 
                      linewidth=5, capsize = 8)
     else:
         for i,group in enumerate(group_names.values()):
-            y = scores.loc[group,variable+str(startsess):variable+str(endsess)]
+            y = scores.loc[group,columns]
             plt.errorbar(x, y,
-                         yerr = sem.loc[group,variable+str(startsess):variable+str(endsess)], 
+                         yerr = sem.loc[group,columns], 
                          label=group,linewidth=5, capsize = 8)
             ax.legend()
        
@@ -556,10 +568,19 @@ def rgt_bar_plot(variable,startsess,endsess,title,scores,sem, group_names = None
     
     bars = [0]*len(scores.index)
     err = [0]*len(scores.index)
-    sess = [variable + str(s) for s in list(range(startsess,endsess+1))]
+    sess = [str(x) for x in np.arange(startsess,endsess+1)] #list of session numbers as strings
+    #extract column names to include in figure
+    columns = []
+    for col in scores.columns:
+        for session_number in sess: 
+            #check if variable name is in column name and column name ends with last letter of variable name + session number
+            if variable in col and col.endswith(variable[-1] + session_number):
+                #if so, append column name to columns list
+                columns.append(col)
+    
     for i,group in enumerate(scores.index):
-        bars[i] = scores.loc[group, [col for col in scores.columns if col in sess]].mean()
-        err[i] = sem.loc[group, [col for col in sem.columns if col in sess]].mean()
+        bars[i] = scores.loc[group, columns].mean()
+        err[i] = sem.loc[group,columns].mean()
         plt.bar(i, bars[i], yerr = err[i], capsize = 8, width = .7, color = ['C'+str(i)], label = scores.index[i])
    
     ax = plt.gca()
@@ -584,6 +605,7 @@ def choice_bar_plot(startsess, endsess, scores, sem, task = None):
         labels = ['P1','P2','P3','P4']
     df = pd.DataFrame()
     df1 = pd.DataFrame()
+    
 
     for choice in labels:
         df[choice] = scores.loc[:, [col for col in scores.columns if choice in col 
