@@ -18,6 +18,8 @@ from matplotlib.ticker import MaxNLocator
 # stats imports 
 import scipy.stats as stats
 import math
+import seaborn as sns
+import pingouin as pg
 
 #the following line prevents pandas from giving unecessary errors 
 pd.options.mode.chained_assignment = None
@@ -29,10 +31,6 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
     for i,file in enumerate(fnames):
         if i == 0:
             df = pd.read_excel(fnames[i])
-#             df.dropna(how = 'all', inplace = True)
-#             df.reset_index(drop=True, inplace = True)
-#             df['Session'] = df['Session'].astype(int)
-#             df['Subject'] = df['Subject'].astype(int)
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
                     for j in range(len(df)):
@@ -40,10 +38,6 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
                             df.at[j,'Session'] = i + 1
         else:
             df2 = pd.read_excel(fnames[i])
-#             df.dropna(how = 'all', inplace = True)
-#             df.reset_index(drop=True, inplace = True)
-#             df['Session'] = df['Session'].astype(int)
-#             df['Subject'] = df['Subject'].astype(int)
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
                     for j in range(len(df2)):
@@ -144,22 +138,15 @@ def edit_groups(df, orig_group, new_group, subs = 'all'):
 def get_choices(df):
     configA = np.array([1, 4, 0, 2, 3]) #this is the order for version A - i.e., hole 1 corresponds to P1
     configB = np.array([4, 1, 0, 3, 2]) #this is the order for version B - i.e., hole 1 corresponds to P4
-
-    #I took the following code from someone else, so honestly I'm not entirely sure how it works haha
-    #the important thing is that it uses the configurations above to assign the correct option, 
+    
+    #this uses the configurations above to assign the correct option, 
     #based on whether the MSN name contains 'A' or 'B'
     df['option'] = df['MSN'].str.contains("B").values*configB[df['Chosen'].astype('int').ravel()-1].astype('int') + \
         df['MSN'].str.contains("A").values*configA[df['Chosen'].astype('int').ravel()-1].astype('int')
-    
-    ###I can just take your word for it right? haha
-    ####Yes
 
-    #the above code changes any zero in the chosen column to a three in the option column - don't need to know why
-    #so we need to fix that (zeros represent either a premature response or an omission)
-    for i in range(len(df)): ##range gives me a list from 0 to the len(df), which should be all the indices
-        if df['Chosen'][i] == 0: ###can we say this in English? 
-            ##the same as df.at
-            ##if the index of the 'Chosen' column gets 0 --> option equals 0 
+    #the above code changes any zero in the chosen column to a three in the option column - fixed with this code
+    for i in range(len(df)): 
+        if df['Chosen'][i] == 0: 
             df['option'][i] = 0 
     return df    
 
@@ -211,8 +198,8 @@ def get_sum_choice_all(df, mode = 'Session', task = None):
     df1 = pd.concat(df_sess, axis=1)
     if task == 'choiceRGT':
         for num in np.sort(df[mode].unique()):
-            df1['risk_cued_'+ str(num)] = df1[str(num)+'P1_C'] + df1[str(num)+'P2_C']- df1[str(num)+'P3_C'] - df1[str(num)+'P4_C']
-            df1['risk_uncued_' + str(num)] = df1[str(num)+'P1_U'] + df1[str(num)+'P2_U']- df1[str(num)+'P3_U'] - df1[str(num)+'P4_U']
+            df1['risk_cued'+ str(num)] = df1[str(num)+'P1_C'] + df1[str(num)+'P2_C']- df1[str(num)+'P3_C'] - df1[str(num)+'P4_C']
+            df1['risk_uncued' + str(num)] = df1[str(num)+'P1_U'] + df1[str(num)+'P2_U']- df1[str(num)+'P3_U'] - df1[str(num)+'P4_U']
     else:
         for num in np.sort(df[mode].unique()):
             df1['risk'+ str(num)] = df1[str(num)+'P1'] + df1[str(num)+'P2']- df1[str(num)+'P3'] - df1[str(num)+'P4']
@@ -234,8 +221,8 @@ def get_premature(df_raw,df_sum,mode = 'Session', task = None):
         prem_resp_uncued['prem_percent'] = prem_resp_uncued['Premature_Resp']/prem_resp_uncued['Trials'] * 100
 
         for num in np.sort(df_raw[mode].unique()):
-            df_sum['prem_cued_' + str(num)] = prem_resp_cued.loc[prem_resp_cued[mode]==num].set_index('Subject')['prem_percent']
-            df_sum['prem_uncued_' + str(num)] = prem_resp_uncued.loc[prem_resp_uncued[mode]==num].set_index('Subject')['prem_percent']
+            df_sum['prem_cued' + str(num)] = prem_resp_cued.loc[prem_resp_cued[mode]==num].set_index('Subject')['prem_percent']
+            df_sum['prem_uncued' + str(num)] = prem_resp_uncued.loc[prem_resp_uncued[mode]==num].set_index('Subject')['prem_percent']
         return df_sum 
     
     prem_resp = df_raw.groupby(['Subject', mode],as_index=False)['Premature_Resp'].sum()
@@ -261,8 +248,8 @@ def get_latencies(df_raw,df_sum,mode = 'Session', task = None):
         collect_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Collect_Lat'].mean()
     
         for num in np.sort(df_raw[mode].unique()):
-            df_sum['co_lat_cued_' + str(num)] = collect_lat_cued.loc[collect_lat_cued[mode]==num].set_index('Subject')['Collect_Lat']
-            df_sum['co_lat_uncued_' + str(num)] = collect_lat_uncued.loc[collect_lat_uncued[mode]==num].set_index('Subject')['Collect_Lat']
+            df_sum['co_lat_cued' + str(num)] = collect_lat_cued.loc[collect_lat_cued[mode]==num].set_index('Subject')['Collect_Lat']
+            df_sum['co_lat_uncued' + str(num)] = collect_lat_uncued.loc[collect_lat_uncued[mode]==num].set_index('Subject')['Collect_Lat']
             
         #choice lat
         df_cued = df_raw.loc[(df_raw['Chosen'] != 0) & (df_raw['Cued_Chosen'] == 1)]
@@ -270,8 +257,8 @@ def get_latencies(df_raw,df_sum,mode = 'Session', task = None):
         choice_lat_uncued = df_uncued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
         choice_lat_cued = df_cued.groupby(['Subject',mode],as_index=False)['Choice_Lat'].mean()
         for num in np.sort(df_raw[mode].unique()):
-            df_sum['ch_lat_cued_' + str(num)] = choice_lat_cued.loc[choice_lat_cued[mode]==num].set_index('Subject')['Choice_Lat']
-            df_sum['ch_lat_uncued_' + str(num)] = choice_lat_uncued.loc[choice_lat_uncued[mode]==num].set_index('Subject')['Choice_Lat']
+            df_sum['ch_lat_cued' + str(num)] = choice_lat_cued.loc[choice_lat_cued[mode]==num].set_index('Subject')['Choice_Lat']
+            df_sum['ch_lat_uncued' + str(num)] = choice_lat_uncued.loc[choice_lat_uncued[mode]==num].set_index('Subject')['Choice_Lat']
         
         #lever latency
         df_uncued = df_raw.loc[df_raw['Uncued_Chosen'] == 1]
@@ -320,8 +307,8 @@ def get_omit(df_raw,df_sum,mode = 'Session', task = None):
         lev_omit['lev_omit_percent'] = lev_omit['Choice_Omit']/lev_omit['Trials'] * 100
         
         for num in np.sort(df_raw[mode].unique()):
-            df_sum['cued_omit_' + str(num)] = cued_omit.loc[cued_omit[mode]==num].set_index('Subject')['omit_percent']
-            df_sum['uncued_omit_' + str(num)] = uncued_omit.loc[uncued_omit[mode]==num].set_index('Subject')['omit_percent']
+            df_sum['cued_omit' + str(num)] = cued_omit.loc[cued_omit[mode]==num].set_index('Subject')['omit_percent']
+            df_sum['uncued_omit' + str(num)] = uncued_omit.loc[uncued_omit[mode]==num].set_index('Subject')['omit_percent']
             df_sum['lev_omit' + str(num)] = lev_omit.loc[lev_omit[mode]==num].set_index('Subject')['lev_omit_percent']
         
         return df_sum 
@@ -403,6 +390,47 @@ def get_summary_data(df_raw, mode = 'Session', task = None):
         df_sum = get_preference_score(df_raw,df_sum,mode)
     return df_sum
 
+def get_long_summary_data(df_edited, df_sum, task = None): 
+    "takes in the edited df (after dropping subjects and sessions) and wide-summary df, and outputs a long-summary df"
+    subs = df_edited.Subject.unique() #list of subjects
+    subs.sort() 
+
+    sess = list(df_edited.Session.unique())
+    sess.sort()
+    all_sess = []
+    for i in range(len(subs)): #for all subjects 
+        all_sess.append(sess) #all_sess is now a list of lists (sess)
+
+    df_temp = df_edited.groupby(['Subject','Session'],as_index=False)['Trial'].max()
+    df_temp.drop('Trial', inplace=True, axis=1)
+
+    if task == 'choiceRGT':
+        choice_names = ['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U']
+    else:
+        choice_names = ['P1','P2','P3','P4'] #for P1-P4 
+
+    for col in choice_names:
+        df_temp[col] = [0] * len(df_temp) #create a column of zeros for the length
+        for session in sess: #for each session
+            for rat in subs: #for each subject
+                idx = df_temp.loc[np.logical_and(df_temp['Subject'] == rat, df_temp['Session'] == session)].index.values
+                df_temp.at[idx, col] = df_sum.at[rat, str(session) + col] 
+
+    if task == 'choiceRGT':
+        column_names = ['risk_cued','risk_uncued','co_lat_cued','co_lat_uncued','ch_lat_cued','ch_lat_uncued',
+                        'cued_lev_lat','uncued_lev_lat','cued_omit','uncued_omit','lev_omit','trial_init','prem_cued','prem_uncued','pref']
+    else:
+        column_names = ['risk','collect_lat','choice_lat','omit','trial','prem'] #for variables ending in session
+
+    for col in column_names:
+        df_temp[col] = [0] * len(df_temp)
+        for session in sess:
+            for rat in subs:
+                idx = df_temp.loc[np.logical_and(df_temp['Subject'] == rat, df_temp['Session'] == session)].index.values
+                df_temp.at[idx, col] = df_sum.at[rat, col + str(session)]
+
+    return df_temp
+
 def impute_missing_data(df1, session = None, subject = None, choice = None, vars = None):
     if choice == 'all':
         for i in range(1,5):
@@ -422,6 +450,42 @@ def impute_missing_data(df1, session = None, subject = None, choice = None, vars
             df1.at[subject,var+str(session)] = np.mean([df1.at[subject,var+str(session-1)],
                                                         df1.at[subject,var + str(session+1)]])
     return df1
+
+#--------------------------------GET BASELINE DATA-------------------------------#
+
+def get_baseline(df_long_sum, variables = None, sessions = None, task = None): 
+    "Takes in long-summary data (dataframe), outcome variables (list) and sessions (list) and runs a RM ANOVA on those variables across those sessions."
+    "If nothing is passed to variables or sessions, the RM ANOVA will be run on all variables and sessions in df_long_sum"
+    "Must pass at least 2 session numbers to sessions"
+    "The function will output multiple print statements outlining which variables are unstable (first dict), and which are stable (second dict), with their respective p-values"
+    
+    #can edit to take wide summary data (and just use get_long_summary_data as a helper function)***
+    
+    #filter rows by sessions, and select columns by variables
+    if variables == None: #run all variables
+        if task == 'choiceRGT':
+            variables = ['risk_cued','risk_uncued','co_lat_cued','co_lat_uncued','ch_lat_cued','ch_lat_uncued',
+                        'cued_lev_lat','uncued_lev_lat','cued_omit','uncued_omit','lev_omit','trial_init','prem_cued','prem_uncued','pref'] 
+        else:
+            variables = ['risk','collect_lat','choice_lat','omit','trial','prem']
+    if sessions != None:
+        df_long_sum = df_long_sum[df_long_sum.Session.isin(sessions)] 
+    else:
+        sessions = list(df_long_sum.Session.unique())
+    
+    #run anova
+    unstable_dict = {}
+    stable_dict = {}
+    for var in variables: 
+        res = pg.rm_anova(dv=var, within='Session', subject='Subject', data=df_long_sum, detailed=True)
+        pval = res['p-unc'][0]
+        if pval < 0.05: 
+            unstable_dict[var]=pval
+        else: 
+            stable_dict[var]=pval
+            
+    #return unstable and stable list
+    return unstable_dict, stable_dict
 
 #--------------------------------GET RISK STATUS-------------------------------#
 
