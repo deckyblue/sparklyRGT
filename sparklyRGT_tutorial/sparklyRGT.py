@@ -392,6 +392,7 @@ def get_summary_data(df_raw, mode = 'Session', task = None):
 
 def get_long_summary_data(df_edited, df_sum, task = None): 
     "takes in the edited df (after dropping subjects and sessions) and wide-summary df, and outputs a long-summary df"
+    "Cannot take subjects with different session numbers"
     subs = df_edited.Subject.unique() #list of subjects
     subs.sort() 
 
