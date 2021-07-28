@@ -465,10 +465,9 @@ def get_baseline(df_long_sum, variables = None, sessions = None, task = None):
     #filter rows by sessions, and select columns by variables
     if variables == None: #run all variables
         if task == 'choiceRGT':
-            variables = ['risk_cued','risk_uncued','co_lat_cued','co_lat_uncued','ch_lat_cued','ch_lat_uncued',
-                        'cued_lev_lat','uncued_lev_lat','cued_omit','uncued_omit','lev_omit','trial_init','prem_cued','prem_uncued','pref'] 
+            variables =['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U','risk_cued','risk_uncued','co_lat_cued','co_lat_uncued','ch_lat_cued','ch_lat_uncued','cued_lev_lat','uncued_lev_lat','cued_omit','uncued_omit','lev_omit','trial_init','prem_cued','prem_uncued','pref'] 
         else:
-            variables = ['risk','collect_lat','choice_lat','omit','trial','prem']
+            variables = ['P1','P2','P3','P4','risk','collect_lat','choice_lat','omit','trial','prem']
     if sessions != None:
         df_long_sum = df_long_sum[df_long_sum.Session.isin(sessions)] 
     else:
