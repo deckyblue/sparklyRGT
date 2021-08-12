@@ -454,7 +454,7 @@ def impute_missing_data(df1, session = None, subject = None, choice = None, vars
 
 #--------------------------------GET BASELINE DATA-------------------------------#
 
-def get_baseline(df_long_sum, variables = None, sessions = None, task = None): 
+def check_stability(df_long_sum, variables = None, sessions = None, task = None): 
     "Takes in long-summary data (dataframe), outcome variables (list) and sessions (list) and runs a RM ANOVA on those variables across those sessions."
     "If nothing is passed to variables or sessions, the RM ANOVA will be run on all variables and sessions in df_long_sum"
     "Must pass at least 2 session numbers to sessions"
