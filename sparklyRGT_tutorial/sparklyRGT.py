@@ -132,7 +132,25 @@ def edit_groups(df, orig_group, new_group, subs = 'all'):
                         df.at[idx,'Group'] = new_group[i]
     df.reset_index(drop = True, inplace = True)
     return df
-    
+#------------------------------FILTER FUNCTIONS---------------------------------#    
+
+def filt_vars(df_long_sum, variables = None, task = None): 
+    """Takes in long df, variables (list object), and task... and outputs/updates variables"""
+    if variables == None: #then run all variables
+        if task == 'choiceRGT':
+            variables = df_long_sum.columns[2:25] #from 'P1_C' to 'pref'
+        else:
+            variables = df_long_sum.columns[2:12] #from 'P1' to 'prem'
+    return variables
+
+def filt_sess(df_long_sum, sessions = None):   
+    """Takes in long df and sessions (list object)... and outputs/updates sessions"""
+    if sessions != None:
+        df_long_sum = df_long_sum[df_long_sum.Session.isin(sessions)] 
+    else:
+        sessions = list(df_long_sum.Session.unique()) #all sessions
+    return sessions
+
 #------------------------------ANALYZE BY SESSION/GROUP---------------------------------#
 
 def get_choices(df):
@@ -452,40 +470,116 @@ def impute_missing_data(df1, session = None, subject = None, choice = None, vars
                                                         df1.at[subject,var + str(session+1)]])
     return df1
 
-#--------------------------------GET BASELINE DATA-------------------------------#
+#--------------------------------GET LONG SUMMARY DATA VARIABLES-------------------------------#
 
-def check_stability(df_long_sum, variables = None, sessions = None, task = None): 
-    "Takes in long-summary data (dataframe), outcome variables (list) and sessions (list) and runs a RM ANOVA on those variables across those sessions."
-    "If nothing is passed to variables or sessions, the RM ANOVA will be run on all variables and sessions in df_long_sum"
-    "Must pass at least 2 session numbers to sessions"
-    "The function will output multiple print statements outlining which variables are unstable (first dict), and which are stable (second dict), with their respective p-values"
+def get_risk_status_long(df_long_sum, sessions = None): 
+    """takes in long df summary data and list of sessions, and gets the mean risks and risk status and appends it to df_long
+    if sessions is not passed, all sessions in df_long are used"""
+   
+    #objects
+    subs = df_long_sum.Subject.unique()
+    mean_risk_list = []
+    sessions = filt_sess(df_long_sum, sessions)
+         
+    for s in subs: 
+        df_sub = df_long_sum.loc[(df_long_sum['Session'].isin(sessions)) & (df_long_sum['Subject'] == s)] #df where Subject == s and where Session == startsess to endsess 
+        mean_risk = df_sub['risk'].mean() #mean_risk
+        for s in sessions:
+            mean_risk_list.append(mean_risk)
+    df_long_sum["mean_risk"] = mean_risk_list 
     
-    #can edit to take wide summary data (and just use get_long_summary_data as a helper function)***
+    for row in df_long_sum.index: #for each row
+        if df_long_sum.at[row,'mean_risk'] > 0:
+            df_long_sum.at[row,'risk_status'] = 1 
+        elif df_long_sum.at[row,'mean_risk'] < 0: 
+            df_long_sum.at[row,'risk_status'] = 2 
+    return df_long_sum
+
+def get_group_long(df_long, group_list):
+    """takes in df_long and group_list, and creates a column called group. Group == 1 represents the first group passed to group_list, and so on."""
+    for row in df_long.index: 
+        for group in group_list: 
+            if np.isin(df_long.at[row,'Subject'], group):
+                if group == group_list[0]:
+                    df_long.at[row,'group'] = 1
+                elif group == group_list[1]:
+                    df_long.at[row,'group'] = 2
+                elif group == group_list[2]:
+                    df_long.at[row,'group'] = 3
+                elif group == group_list[3]:
+                    df_long.at[row,'group'] = 4
+    return df_long
+
+#--------------------------------ANOVA-------------------------------#
+
+def rm_anova(df_long_sum, variables = None, sessions = None, task = None): 
+    """Takes in long-summary data (df), outcome variables (list), sessions (list) and task... then runs a RM ANOVA on those variables across those sessions.
+    If nothing is passed to variables or sessions, the RM ANOVA will be run on all variables and sessions in df_long_sum
+    Must pass at least 2 session numbers to sessions
+    The function will print the unstable df, and stable df"""
     
     #filter rows by sessions, and select columns by variables
-    if variables == None: #run all variables
-        if task == 'choiceRGT':
-            variables =['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U','risk_cued','risk_uncued','co_lat_cued','co_lat_uncued','ch_lat_cued','ch_lat_uncued','cued_lev_lat','uncued_lev_lat','cued_omit','uncued_omit','lev_omit','trial_init','prem_cued','prem_uncued','pref'] 
-        else:
-            variables = ['P1','P2','P3','P4','risk','collect_lat','choice_lat','omit','trial','prem']
-    if sessions != None:
-        df_long_sum = df_long_sum[df_long_sum.Session.isin(sessions)] 
-    else:
-        sessions = list(df_long_sum.Session.unique())
+    variables = filt_vars(df_long_sum, variables, task)
+    sessions = filt_sess(df_long_sum, sessions)
     
     #run anova
-    unstable_dict = {}
+    unstable_dict = {} #dict was required to make the list run down the dataframe (as opposed to across)
+    unstable_pvals = []
+    unstable_vars = []
     stable_dict = {}
-    for var in variables: 
+    stable_pvals = []
+    stable_vars = []
+    
+    for var in variables: #for each variable, run a RM anova
         res = pg.rm_anova(dv=var, within='Session', subject='Subject', data=df_long_sum, detailed=True)
         pval = res['p-unc'][0]
         if pval < 0.05: 
-            unstable_dict[var]=pval
+            unstable_pvals.append(pval)
+            unstable_vars.append(var)
         else: 
-            stable_dict[var]=pval
+            stable_pvals.append(pval)
+            stable_vars.append(var)
+            
+    unstable_dict['variable'] = unstable_vars
+    unstable_dict['p-value'] = unstable_pvals
+    unstable_df = pd.DataFrame(data=unstable_dict)
+    stable_dict['variable'] = stable_vars
+    stable_dict['p-value'] = stable_pvals
+    stable_df = pd.DataFrame(data=stable_dict)
+            
+    #print unstable and stable dataframes
+    print(f'Unstable df: {unstable_df}\nStable df: {stable_df}')
+
+def mixed_anova(df_long_sum, bsf, variables = None, sessions = None, show_df = None, task = None):
+    """Takes in long-summary data with between-subjects factors of interest as separate columns (dataframe), 1 between-subjects factor (string), outcome variables (list), sessions (list),
+    specific variables (list) and task...and runs a mixed ANOVA on those variables across those sessions.
+    If nothing is passed to variables or sessions, the RM ANOVA will be run on all variables and sessions in df_long_sum
+    Must pass at least 2 session numbers to sessions
+    The function will output a list of unstable variable(s) and stable variables, and dfs for the variables specified in show_df"""
+    
+    #filter rows by sessions, and select columns by variables
+    variables = filt_vars(df_long_sum, variables, task)
+    sessions = filt_sess(df_long_sum, sessions)
+        
+    #run anova
+    unstable_list = []
+    stable_list = []
+    if show_df == None: 
+        show_df = []
+    for var in variables: 
+        pvals = []
+        res = pg.mixed_anova(df_long_sum, dv=var, within='Session', subject='Subject', between = bsf)
+        if (var in show_df):
+            print(f'{res}{var}')
+        for pval in range(3):
+            pvals.append(res['p-unc'][pval])
+        if any(x < 0.05 for x in pvals):
+            unstable_list.append(var)
+        else: 
+            stable_list.append(var)
             
     #return unstable and stable list
-    return unstable_dict, stable_dict
+    print(f'Unstable list: {unstable_list}\nStable list: {stable_list}')
 
 #--------------------------------GET RISK STATUS-------------------------------#
 
