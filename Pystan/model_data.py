@@ -70,6 +70,9 @@ def extract_data(df, numsessions, subjects):
 #extract the number of sessions specified above (numsessions)
     df_small = df.loc[df['Session'] < min(df.Session) + numsessions]
 
+#get rid of chosen = 0
+    df_small = df.loc[df['Chosen'] != 0]
+    
 #extract the conditions based on given list of subject numbers
    #df = df_small.loc[np.logical_and(df_small['Cue'] == cue, df_small['Condition'] == condition)]
     df = df_small[df_small['Subject'].isin(subjects)]
