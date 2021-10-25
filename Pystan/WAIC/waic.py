@@ -2,21 +2,10 @@
 import numpy as np
 import os 
 import arviz as az
-import scipy as sp
-import scipy.io as sio
-import scipy.stats as stats
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
-import pickle
-import importlib
 import math
 import xarray as xr
-os.chdir("..")
 import model_data as md
-
-###---SUB_DF HELPER FUNCTIONS---###
 
 def md_subs(df, numsessions, subs): 
     """gets md_df and unique subs (without subject 0)"""
@@ -71,96 +60,126 @@ def chosen_outcome_data(md_df, ntr_df, subs_unique):
                                
     return chosen, outcome
 
-###---get_params FUNCITONS---###
+def get_params(fit, subs_unique, model):
+    """takes in fit, subs_unique, and model name (str) ("basic, basicstar, pscale, pscalestar, pindep or pindepstar"), and outputs 4000 sets of parameters"""
+    
+    if model == "basic": 
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_etaP_df = fit.posterior.etaPositive.to_dataframe()
+        fit_etaN_df = fit.posterior.etaNegative.to_dataframe()
+        fit_m_df = fit.posterior.m.to_dataframe()
 
-def get_params_basic(fit, subs_unique):
-    """takes in fit, subs_unique (list from [1, final sub#]), and outputs params_s using ALL CHAINS
-    function is called basic due to the parameters chosen"""
-    
-    fit_beta_df = fit.posterior.beta.to_dataframe()
-    fit_etaP_df = fit.posterior.etaPositive.to_dataframe()
-    fit_etaN_df = fit.posterior.etaNegative.to_dataframe()
-    fit_m_df = fit.posterior.m.to_dataframe()
-    
-    params_s = []
-    
-    for s in subs_unique:
-        params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
-                                  fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
-                                  fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
-                                  fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])]],
-                                  axis = 1)
-        params_s.append(params)
-    return params_s
+        params_s = []
 
-def get_params_basicstar(fit, subs_unique):
-    """takes in fit, subs_unique (list from [1, final sub#]), and outputs params_s using ALL CHAINS
-    function is called basicstar due to the parameters chosen"""
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
+                                      fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
+                                      fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
     
-    fit_beta_df = fit.posterior.beta.to_dataframe()
-    fit_eta_df = fit.posterior.eta.to_dataframe()
-    fit_m_df = fit.posterior.m.to_dataframe()
-    
-    params_s = []
-    
-    for s in subs_unique:
-        params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
-                                  fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
-                                  fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])]],
-                                  axis = 1)
-        params_s.append(params)
-    return params_s
+    if model == "basicstar":
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_eta_df = fit.posterior.eta.to_dataframe()
+        fit_m_df = fit.posterior.m.to_dataframe()
 
-def get_params_pscale(fit, subs_unique):
-    """takes in fit, subs_unique (list from [1, final sub#]), and outputs params_s using ALL CHAINS
-    function is called basic due to the parameters chosen"""
-    
-    fit_beta_df = fit.posterior.beta.to_dataframe()
-    fit_etaP_df = fit.posterior.etaPositive.to_dataframe()
-    fit_etaN_df = fit.posterior.etaNegative.to_dataframe()
-    fit_m_df = fit.posterior.m.to_dataframe()
-    fit_b_df = fit.posterior.b.to_dataframe()
-    
-    params_s = []
-    
-    for s in subs_unique:
-        params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
-                                  fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
-                                  fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
-                                  fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])],
-                                  fit_b_df[fit_b_df.index.get_level_values('b_dim_0').isin([s-1])]],
-                                  axis = 1)
-        params_s.append(params)
-    return params_s
+        params_s = []
 
-def get_params_pscalestar(fit, subs_unique):
-    """takes in fit, subs_unique (list from [1, final sub#]), and outputs params_s using ALL CHAINS
-    function is called basic due to the parameters chosen"""
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
+                                      fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
     
-    fit_beta_df = fit.posterior.beta.to_dataframe()
-    fit_eta_df = fit.posterior.eta.to_dataframe()
-    fit_m_df = fit.posterior.m.to_dataframe()
-    fit_b_df = fit.posterior.b.to_dataframe()
-    
-    params_s = []
-    
-    for s in subs_unique:
-        params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
-                                  fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
-                                  fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])],
-                                  fit_b_df[fit_b_df.index.get_level_values('b_dim_0').isin([s-1])]],
-                                  axis = 1)
-        params_s.append(params)
-    return params_s
+    if model == "pscale":
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_etaP_df = fit.posterior.etaPositive.to_dataframe()
+        fit_etaN_df = fit.posterior.etaNegative.to_dataframe()
+        fit_m_df = fit.posterior.m.to_dataframe()
+        fit_b_df = fit.posterior.b.to_dataframe()
 
-###---sub_df FUNCTIONS---###
+        params_s = []
 
-def sub_df_basic(df, numsessions, subs, fit):
-    """takes the output from md_subs, ntr_sub and chosen_outcome_data functions and outputs the complete df"""
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
+                                      fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
+                                      fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])],
+                                      fit_b_df[fit_b_df.index.get_level_values('b_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
+    
+    if model == "pscalestar":
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_eta_df = fit.posterior.eta.to_dataframe()
+        fit_m_df = fit.posterior.m.to_dataframe()
+        fit_b_df = fit.posterior.b.to_dataframe()
+
+        params_s = []
+
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
+                                      fit_m_df[fit_m_df.index.get_level_values('m_dim_0').isin([s-1])],
+                                      fit_b_df[fit_b_df.index.get_level_values('b_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
+    
+    if model == "pindep":
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_etaP_df = fit.posterior.etaPositive.to_dataframe()
+        fit_etaN_df = fit.posterior.etaNegative.to_dataframe()
+        fit_p1_df = fit.posterior.p1.to_dataframe()
+        fit_p2_df = fit.posterior.p2.to_dataframe()
+        fit_p3_df = fit.posterior.p3.to_dataframe()
+        fit_p4_df = fit.posterior.p4.to_dataframe()
+
+        params_s = []
+
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
+                                      fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
+
+    if model == "pindepstar":
+        fit_beta_df = fit.posterior.beta.to_dataframe()
+        fit_eta_df = fit.posterior.eta.to_dataframe()
+        fit_p1_df = fit.posterior.p1.to_dataframe()
+        fit_p2_df = fit.posterior.p2.to_dataframe()
+        fit_p3_df = fit.posterior.p3.to_dataframe()
+        fit_p4_df = fit.posterior.p4.to_dataframe()
+
+        params_s = []
+
+        for s in subs_unique:
+            params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
+                                      fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
+                                      fit_m_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
+                                      axis = 1)
+            params_s.append(params)
+        return params_s
+    
+def get_sub_df(df, numsessions, subs, fit, model): 
     md_df, subs_unique = md_subs(df, numsessions, subs)
     ntr_df = ntr_sub(md_df, subs_unique)
     chosen_data, outcome_data = chosen_outcome_data(md_df, ntr_df, subs_unique)
-    params_s = get_params_basic(fit, subs_unique)
+    params_s = get_params(fit, subs_unique, model)
     
     ntr_df['chosen_data'] = chosen_data
     ntr_df['outcome_data'] = outcome_data
@@ -168,48 +187,7 @@ def sub_df_basic(df, numsessions, subs, fit):
     
     return ntr_df, md_df
 
-def sub_df_basicstar(df, numsessions, subs, fit):
-    """takes the output from md_subs, ntr_sub and chosen_outcome_data functions and outputs the complete df"""
-    md_df, subs_unique = md_subs(df, numsessions, subs)
-    ntr_df = ntr_sub(md_df, subs_unique)
-    chosen_data, outcome_data = chosen_outcome_data(md_df, ntr_df, subs_unique)
-    params_s = get_params_basicstar(fit, subs_unique)
-    
-    ntr_df['chosen_data'] = chosen_data
-    ntr_df['outcome_data'] = outcome_data
-    ntr_df['params_s'] = params_s
-    
-    return ntr_df, md_df
-
-def sub_df_pscale(df, numsessions, subs, fit):
-    """takes the output from md_subs, ntr_sub and chosen_outcome_data functions and outputs the complete df"""
-    md_df, subs_unique = md_subs(df, numsessions, subs)
-    ntr_df = ntr_sub(md_df, subs_unique)
-    chosen_data, outcome_data = chosen_outcome_data(md_df, ntr_df, subs_unique)
-    params_s = get_params_pscale(fit, subs_unique)
-    
-    ntr_df['chosen_data'] = chosen_data
-    ntr_df['outcome_data'] = outcome_data
-    ntr_df['params_s'] = params_s
-    
-    return ntr_df, md_df
-
-def sub_df_pscalestar(df, numsessions, subs, fit):
-    """takes the output from md_subs, ntr_sub and chosen_outcome_data functions and outputs the complete df"""
-    md_df, subs_unique = md_subs(df, numsessions, subs)
-    ntr_df = ntr_sub(md_df, subs_unique)
-    chosen_data, outcome_data = chosen_outcome_data(md_df, ntr_df, subs_unique)
-    params_s = get_params_pscalestar(fit, subs_unique)
-    
-    ntr_df['chosen_data'] = chosen_data
-    ntr_df['outcome_data'] = outcome_data
-    ntr_df['params_s'] = params_s
-    
-    return ntr_df, md_df
-
-###---log_lik_values FUNCTIONS---###
-
-def basic_log_lik_values(sub_df):
+def log_lik_values(sub_df, model):
     """takes in sub_df, and gets all the log_likelihood values in a list"""
     
     log_lik_values = [] #stores log_lik_values for all subjects
@@ -241,127 +219,22 @@ def basic_log_lik_values(sub_df):
 
             if outcome_data[t] == 1: 
                 V[chosen_data[t]-1] += params[p][1]*(win_amount[chosen_data[t]-1] - V[chosen_data[t]-1]) #subtract 1 because chosen_data stores P1-P4 as 1-4 instead 0-3
-            else: 
-                V[chosen_data[t]-1] += params[p][2]*(-params[p][3]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+            else:
+                if model == "basic":
+                    V[chosen_data[t]-1] += params[p][2]*(-params[p][3]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+                elif model == "basicstar": 
+                    V[chosen_data[t]-1] += params[p][1]*(-params[p][2]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+                elif model == "pscale":
+                    V[chosen_data[t]-1] += params[p][2]*(params[p][4] - params[p][3]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+                elif model == "pscalestar":
+                    V[chosen_data[t]-1] += params[p][1]*(params[p][3] - params[p][2]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+                elif model == "pindep":
+                    V[chosen_data[t]-1] += params[p][2]*(-params[p][chosen_data[t]+2]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
+                else: #model == "pindepstar":
+                    V[chosen_data[t]-1] += params[p][1]*(-params[p][chosen_data[t]+1]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
             log_lik_values.append(math.log(p_action[chosen_data[t]-1])) 
     
     return log_lik_values
-
-def basicstar_log_lik_values(sub_df):
-    """takes in sub_df, and gets all the log_likelihood values in a list"""
-    
-    log_lik_values = [] #stores log_lik_values for all subjects
-    
-    #model
-    p_win = [0.9,0.8,0.5,0.4]
-    win_amount = [1,2,3,4]
-    pun_dur = [5,10,30,40]
-    
-    for s in sub_df.index: #note: s is 0-indexed
-        
-        #subject data
-        ntr = sub_df.at[s,'range_ntr']
-        chosen_data = sub_df.at[s,'chosen_data']
-        outcome_data = sub_df.at[s,'outcome_data']
-        params = sub_df.at[s, 'params_s'] #4000 sets of parameters 
-        
-        #updating model values
-        V = np.zeros(4) # [0,0,0,0]
-#         Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
-        
-        paramsXtrial = [(p, t) for p in range(4000) for t in range(ntr[-1]+1 - ntr[0])] #4000 sets of parameters, for ntr trials
-        for (p, t) in paramsXtrial: 
-
-            if t == 0: #if using a new set of parameters (if first trial, reset)...
-                V = np.zeros(4) #reset the V values
-
-            p_action = np.exp(params[p][0]*V)/np.sum(np.exp(params[p][0]*V)) #p_action holds the probabilities of each action (P1-P4), starting at 0.25 for each
-
-            if outcome_data[t] == 1: 
-                V[chosen_data[t]-1] += params[p][1]*(win_amount[chosen_data[t]-1] - V[chosen_data[t]-1]) #subtract 1 because chosen_data stores P1-P4 as 1-4 instead 0-3
-            else: 
-                V[chosen_data[t]-1] += params[p][1]*(-params[p][2]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
-            log_lik_values.append(math.log(p_action[chosen_data[t]-1])) 
-    
-    return log_lik_values
-
-def pscale_log_lik_values(sub_df):
-    """takes in sub_df, and gets all the log_likelihood values in a list"""
-    
-    log_lik_values = [] #stores log_lik_values for all subjects
-    
-    #model
-    p_win = [0.9,0.8,0.5,0.4]
-    win_amount = [1,2,3,4]
-    pun_dur = [5,10,30,40]
-    
-    for s in sub_df.index: #note: s is 0-indexed
-        
-        #subject data
-        ntr = sub_df.at[s,'range_ntr']
-        chosen_data = sub_df.at[s,'chosen_data']
-        outcome_data = sub_df.at[s,'outcome_data']
-        params = sub_df.at[s, 'params_s'] #4000 sets of parameters 
-        
-        #updating model values
-        V = np.zeros(4) # [0,0,0,0]
-#         Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
-        
-        paramsXtrial = [(p, t) for p in range(4000) for t in range(ntr[-1]+1 - ntr[0])] #4000 sets of parameters, for ntr trials
-        for (p, t) in paramsXtrial: 
-
-            if t == 0: #if using a new set of parameters (if first trial, reset)...
-                V = np.zeros(4) #reset the V values
-
-            p_action = np.exp(params[p][0]*V)/np.sum(np.exp(params[p][0]*V)) #p_action holds the probabilities of each action (P1-P4), starting at 0.25 for each
-
-            if outcome_data[t] == 1: 
-                V[chosen_data[t]-1] += params[p][1]*(win_amount[chosen_data[t]-1] - V[chosen_data[t]-1]) #subtract 1 because chosen_data stores P1-P4 as 1-4 instead 0-3
-            else: 
-                V[chosen_data[t]-1] += params[p][2]*(params[p][4] - params[p][3]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
-            log_lik_values.append(math.log(p_action[chosen_data[t]-1])) 
-    
-    return log_lik_values
-
-def pscalestar_log_lik_values(sub_df):
-    """takes in sub_df, and gets all the log_likelihood values in a list"""
-    
-    log_lik_values = [] #stores log_lik_values for all subjects
-    
-    #model
-    p_win = [0.9,0.8,0.5,0.4]
-    win_amount = [1,2,3,4]
-    pun_dur = [5,10,30,40]
-    
-    for s in sub_df.index: #note: s is 0-indexed
-        
-        #subject data
-        ntr = sub_df.at[s,'range_ntr']
-        chosen_data = sub_df.at[s,'chosen_data']
-        outcome_data = sub_df.at[s,'outcome_data']
-        params = sub_df.at[s, 'params_s'] #4000 sets of parameters 
-        
-        #updating model values
-        V = np.zeros(4) # [0,0,0,0]
-#         Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
-        
-        paramsXtrial = [(p, t) for p in range(4000) for t in range(ntr[-1]+1 - ntr[0])] #4000 sets of parameters, for ntr trials
-        for (p, t) in paramsXtrial: 
-
-            if t == 0: #if using a new set of parameters (if first trial, reset)...
-                V = np.zeros(4) #reset the V values
-
-            p_action = np.exp(params[p][0]*V)/np.sum(np.exp(params[p][0]*V)) #p_action holds the probabilities of each action (P1-P4), starting at 0.25 for each
-
-            if outcome_data[t] == 1: 
-                V[chosen_data[t]-1] += params[p][1]*(win_amount[chosen_data[t]-1] - V[chosen_data[t]-1]) #subtract 1 because chosen_data stores P1-P4 as 1-4 instead 0-3
-            else: 
-                V[chosen_data[t]-1] += params[p][1]*(params[p][3] - params[p][2]*pun_dur[chosen_data[t]-1] - V[chosen_data[t]-1])
-            log_lik_values.append(math.log(p_action[chosen_data[t]-1])) 
-    
-    return log_lik_values
-
-###---get_inference_data FUNCTION---###
 
 def get_inference_data_log_lik(md_df, log_lik_values, fit):
     """takes in log_lik_values from get_log_lik_values, and creates an inference data object"""
@@ -383,62 +256,17 @@ def get_inference_data_log_lik(md_df, log_lik_values, fit):
     
     return id_log_likelihood
 
-###---waic FUNCTIONS---###
-
-def waic_basic_fit(df, numsessions, subs, fit):
+def waic_fit(df, numsessions, subs, fit, model):
     """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
     df - product of rgt.load_multiple_data,
     numsessions = 5,
     subs = cue variant (list), 
-    fit = .nc object storing the model and fit"""
+    fit = .nc object storing the model and fit
+    model = model name (str)"""
     
-    sub_df, md_df = sub_df_basic(df, numsessions, subs, fit)
-    log_lik_values = basic_log_lik_values(sub_df)
-    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values, fit)
-    
-    waic = az.waic(id_log_likelihood)
-    return waic
-
-def waic_basicstar_fit(df, numsessions, subs, fit):
-    """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
-    df - product of rgt.load_multiple_data,
-    numsessions = 5,
-    subs = cue variant (list), 
-    fit = .nc object storing the model and fit"""
-    
-    sub_df, md_df = sub_df_basicstar(df, numsessions, subs, fit)
-    log_lik_values = basicstar_log_lik_values(sub_df)
-    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values, fit)
+    subs_df, md_df = get_sub_df(df, numsessions, subs, fit, model) #calculating subs twice 
+    log_lik_values_list = log_lik_values(subs_df, model)
+    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values_list, fit)
     
     waic = az.waic(id_log_likelihood)
     return waic
-
-def waic_pscale_fit(df, numsessions, subs, fit):
-    """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
-    df - product of rgt.load_multiple_data,
-    numsessions = 5,
-    subs = cue variant (list), 
-    fit = .nc object storing the model and fit"""
-    
-    sub_df, md_df = sub_df_pscale(df, numsessions, subs, fit)
-    log_lik_values = pscale_log_lik_values(sub_df)
-    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values, fit)
-    
-    waic = az.waic(id_log_likelihood)
-    return waic
-
-def waic_pscalestar_fit(df, numsessions, subs, fit):
-    """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
-    df - product of rgt.load_multiple_data,
-    numsessions = 5,
-    subs = cue variant (list), 
-    fit = .nc object storing the model and fit"""
-    
-    sub_df, md_df = sub_df_pscalestar(df, numsessions, subs, fit)
-    log_lik_values = pscalestar_log_lik_values(sub_df)
-    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values, fit)
-    
-    waic = az.waic(id_log_likelihood)
-    return waic
-
-
