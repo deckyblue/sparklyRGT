@@ -37,6 +37,20 @@ reverse_pscalestar_fit = az.from_netcdf('reverse_pscale-star_fit.nc')
 standard_pscalestar_fit = az.from_netcdf('standard_pscale-star_fit.nc')
 uncued_pscalestar_fit = az.from_netcdf('uncued_pscale-star_fit.nc')
 
+loss_pindep_fit = az.from_netcdf('loss_pindep_fit.nc')
+outcome_pindep_fit = az.from_netcdf('outcome_pindep_fit.nc')
+random_pindep_fit = az.from_netcdf('random_pindep_fit.nc')
+reverse_pindep_fit = az.from_netcdf('reverse_pindep_fit.nc')
+standard_pindep_fit = az.from_netcdf('standard_pindep_fit.nc')
+uncued_pindep_fit = az.from_netcdf('uncued_pindep_fit.nc')
+
+loss_pindepstar_fit = az.from_netcdf('loss_pindep-star_fit.nc')
+outcome_pindepstar_fit = az.from_netcdf('outcome_pindep-star_fit.nc')
+random_pindepstar_fit = az.from_netcdf('random_pindep-star_fit.nc')
+reverse_pindepstar_fit = az.from_netcdf('reverse_pindep-star_fit.nc')
+standard_pindepstar_fit = az.from_netcdf('standard_pindep-star_fit.nc')
+uncued_pindepstar_fit = az.from_netcdf('uncued_pindep-star_fit.nc')
+
 ###LOAD IN DATA###
 
 fnames = ['BH09_raw-free_S1-5_corrected.xlsx','CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx',"CH01_corrected.xlsx"]
