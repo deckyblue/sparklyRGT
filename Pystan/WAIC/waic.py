@@ -146,10 +146,10 @@ def get_params(fit, subs_unique, model):
             params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
                                       fit_etaP_df[fit_etaP_df.index.get_level_values('etaPositive_dim_0').isin([s-1])],
                                       fit_etaN_df[fit_etaN_df.index.get_level_values('etaNegative_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
+                                      fit_p1_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
+                                      fit_p2_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
+                                      fit_p3_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
+                                      fit_p4_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
                                       axis = 1)
             params_s.append(params)
         return params_s
@@ -167,10 +167,10 @@ def get_params(fit, subs_unique, model):
         for s in subs_unique:
             params = np.concatenate([fit_beta_df[fit_beta_df.index.get_level_values('beta_dim_0').isin([s-1])],
                                       fit_eta_df[fit_eta_df.index.get_level_values('eta_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
-                                      fit_m_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
+                                      fit_p1_df[fit_p1_df.index.get_level_values('p1_dim_0').isin([s-1])],
+                                      fit_p2_df[fit_p2_df.index.get_level_values('p2_dim_0').isin([s-1])],
+                                      fit_p3_df[fit_p3_df.index.get_level_values('p3_dim_0').isin([s-1])],
+                                      fit_p4_df[fit_p4_df.index.get_level_values('p4_dim_0').isin([s-1])]],
                                       axis = 1)
             params_s.append(params)
         return params_s

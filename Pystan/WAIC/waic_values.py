@@ -6,6 +6,7 @@ import pandas as pd
 import math
 import xarray as xr
 import model_data as md
+import waic as wc
 
 ###ASSIGN FIT OBJECTS###
 
