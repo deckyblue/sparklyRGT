@@ -14,7 +14,7 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
 #load data from computer
     for i,file in enumerate(fnames):
         if i == 0:
-            df = pd.read_excel(fnames[i])
+            df = pd.read_excel(fnames[i],engine='openpyxl')
 #             df.dropna(how = 'all', inplace = True)
 #             df.reset_index(drop=True, inplace = True)
 #             df['Session'] = df['Session'].astype(int)
@@ -25,7 +25,7 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_excel(fnames[i])
+            df2 = pd.read_excel(fnames[i], engine='openpyxl')
 #             df.dropna(how = 'all', inplace = True)
 #             df.reset_index(drop=True, inplace = True)
 #             df['Session'] = df['Session'].astype(int)
@@ -43,7 +43,7 @@ def load_multiple_data(fnames, reset_sessions=False):
 #load multiple datasets from computer and redo subject numbers (for multiple cohorts) 
     for i,file in enumerate(fnames):
         if i == 0:
-            df = pd.read_excel(fnames[i])
+            df = pd.read_excel(fnames[i], engine='openpyxl')
             df['Subject'] += 100 #rat 1 becomes rat 101
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
@@ -51,7 +51,7 @@ def load_multiple_data(fnames, reset_sessions=False):
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_excel(fnames[i])
+            df2 = pd.read_excel(fnames[i], engine='openpyxl')
             df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc. 
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
