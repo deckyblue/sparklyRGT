@@ -1,21 +1,22 @@
 #!/bin/bash
  
-#PBS -l walltime=10:00:00,select=1:ncpus=4:mem=2gb
-#PBS -N rgt-variant_basic_job
+#PBS -l walltime=10:00:00,select=1:ncpus=4:mem=6gb
+#PBS -N <job name>
 #PBS -A st-caw42-1
 #PBS -m abe
-#PBS -M bretthathaway@psych.ubc.ca
+#PBS -M <your email address>
 #PBS -o /scratch/st-caw42-1/model_output.txt
 #PBS -e /scratch/st-caw42-1/model_errors.txt
  
 ################################################################################
 
-module unuse /arc/software/spack/share/spack/lmod/linux-centos7-x86_64/Core
-module use /arc/software/spack-0.14.0-110/share/spack/lmod/linux-centos7-x86_64/Core
-module restore stan-gpu
-conda activate /arc/home/dexrk/stan_env
 module load gcc/9.1.0
+module load python/3.7.3
+
+cd /arc/project/st-caw42-1
+source cmdstanpy_env/bin/activate
 
 cd $PBS_O_WORKDIR
 
-python3 uncued_basic_run.py
+python <name of .py file>
+
