@@ -13,14 +13,14 @@ import xarray as xr
 numsessions = 5
 
 #task to do modelling on - should be 'Classic' for uncued task, 'cue' for cued task 
-task_name = 'cue'
+task_name = 'loss'
 
 #insert the names of the files to do the modeling on 
-fnames = ['']
+fnames = ['BH09_raw-free_S1-5_corrected.xlsx','CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx',"CH01_corrected.xlsx"]
 
 #choose the model (.stan file should be uploaded to cmdstan directory in scratch)
 model_file_name = 'rGT_RLmodel_basic.stan'
-#shortened name of model for file naming later on: (basic, basicstar, pscale, pscalestar, pindep, pindepstar)
+#shortened name of model for file naming later on: (basic, basicstar, pscale, pscalestar, indep, indepstar)
 model_name = 'basic'
 
 #--------------------------
@@ -34,17 +34,17 @@ df = md.load_multiple_data(fnames, reset_sessions = True)
 
 #if running on rgt variant dataset, uncomment the following lines: 
 
-# df = df.replace(to_replace = {'MSN':
-#                          {'LossrGT_A-losscue_v1': 'outcomeRGT_A',
-#                         'LossrGT_B-losscue_v1': 'outcomeRGT_B',
-#                          'AnarchyrGT_A-losscue_v6':'RandomRGT_A',
-#                         'AnarchyrGT_B-losscue_v6': 'RandomRGT_B',
-#                          'MisrGT_A-cue':'RevRGT_A',
-#                          'MisrGT_B-cue':'RevRGT_B',
-#                          'RevRGT_A-cue':'RevRGT_A',
-#                          'RevRGT_B-cue':'RevRGT_B',
-#                          'LossRGT_A':'lossRGT_A'
-#                         }})
+df = df.replace(to_replace = {'MSN':
+                         {'LossrGT_A-losscue_v1': 'outcomeRGT_A',
+                        'LossrGT_B-losscue_v1': 'outcomeRGT_B',
+                         'AnarchyrGT_A-losscue_v6':'randomRGT_A',
+                        'AnarchyrGT_B-losscue_v6': 'randomRGT_B',
+                         'MisrGT_A-cue':'revRGT_A',
+                         'MisrGT_B-cue':'revRGT_B',
+                         'RevRGT_A-cue':'revRGT_A',
+                         'RevRGT_B-cue':'revRGT_B',
+                         'LossRGT_A':'lossRGT_A'
+                        }})
 
 
 #create lists of subjects run on each task (classic A, classic B, etc.)
