@@ -79,5 +79,5 @@ fit = model.sample(data = model_data, chains = 4, iter_sampling = 800, iter_warm
 #save all the output and summary df 
 fit.save_csvfiles(dir='/scratch/st-caw42-1/stan_output')
 fit_summary = fit.summary().to_csv('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name + '_fit_summary.csv')
-fit_az = az.from_cmstanpy(fit)
+fit_az = az.from_cmdstanpy(fit)
 fit_az.to_netcdf('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name +  '_fit.nc')
