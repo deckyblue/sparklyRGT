@@ -28,16 +28,18 @@ pd.options.mode.chained_assignment = None
 
 def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> load_data runs like normal 
 #load data from computer
+    
     for i,file in enumerate(fnames):
+        
         if i == 0:
-            df = pd.read_excel(fnames[i])
+            df = check_file_type(file, i)
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
                     for j in range(len(df)):
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_excel(fnames[i])
+            df2 = check_file_type(file, i)
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
                     for j in range(len(df2)):
@@ -46,11 +48,27 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
             df = df.append(df2, ignore_index = True)
     return df
 
-def load_multiple_data(fnames, reset_sessions=False): 
-#load multiple datasets from computer and redo subject numbers (for multiple cohorts) 
+def load_multiple_data(fnames, path, reset_sessions): 
+    columns = ["MSN", "StartDate", "StartTime", "Subject", "Group", "Box",
+               "Experiment", "Comment", "Session", "Trial", "Rewarded", "Pellets",
+               "Omit", "Chosen", "Choice_Lat", "Collect_Lat", "Pun_Persev_H1",
+               "Pun_Persev_H2", "Pun_Persev_H3", "Pun_Persev_H4", "Pun_Persev_H5",
+               "Pun_HeadEntry", "Pun_Dur", "Premature_Resp", "Premature_Hole",
+               "Rew_Persev_H1", "Rew_Persev_H2", "Rew_Persev_H3", "Rew_Persev_H4",
+               "Rew_Persev_H5"]
+# load multiple datasets from computer and redo subject numbers (for multiple cohorts) 
     for i,file in enumerate(fnames):
         if i == 0:
-            df = pd.read_excel(fnames[i])
+            if file.startswith('~$'):
+                continue
+            elif file.endswith('.xlsx'):
+                df = pd.read_excel(path + fnames[i])
+            else:
+                df = pd.read_csv(str(path) + str(fnames[i]), names = columns)
+                if file.startswith('TF_rGT'):
+                    df['Subject'] = df['Subject'].astype(str).str[1:]
+                    df['Subject'] = pd.to_numeric(df['Subject'])
+                    
             df['Subject'] += 100 #rat 1 becomes rat 101
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
@@ -58,8 +76,17 @@ def load_multiple_data(fnames, reset_sessions=False):
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_excel(fnames[i])
-            df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc. 
+            if file.startswith('~$'):
+                continue
+            elif file.endswith('.xlsx'):
+                df2 = pd.read_excel(path + fnames[i])
+            else:
+                df2 = pd.read_csv(str(path) + str(fnames[i]), names = columns)
+                if file.startswith('TF_rGT'):
+                    df2['Subject'] = df2['Subject'].astype(str).str[1:]
+                    df2['Subject'] = pd.to_numeric(df2['Subject'])
+            
+            df2['Subject'] += 100 * (1+i) #rat 1 becomes rat 201, 301, etc.
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
                     for j in range(len(df2)):
