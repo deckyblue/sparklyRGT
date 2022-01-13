@@ -16,7 +16,7 @@ numsessions = 5
 task_name = 'cue'
 
 #insert the names of the files to do the modeling on 
-fnames = ['']
+fnames = ['sockeye_data.csv']
 
 #choose the model (.stan file should be uploaded to cmdstan directory in scratch)
 model_file_name = 'rGT_RLmodel_basic.stan'

@@ -10,26 +10,20 @@ def get_model_data(df,numsessions, subjects):
     return model_data
 
 
-def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> load_data runs like normal 
+def load_data(fnames, reset_sessions = False):
 #load data from computer
+    
     for i,file in enumerate(fnames):
+        
         if i == 0:
-            df = pd.read_excel(fnames[i],engine='openpyxl')
-#             df.dropna(how = 'all', inplace = True)
-#             df.reset_index(drop=True, inplace = True)
-#             df['Session'] = df['Session'].astype(int)
-#             df['Subject'] = df['Subject'].astype(int)
+            df = pd.read_csv(fnames[i])
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
                     for j in range(len(df)):
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = pd.read_excel(fnames[i], engine='openpyxl')
-#             df.dropna(how = 'all', inplace = True)
-#             df.reset_index(drop=True, inplace = True)
-#             df['Session'] = df['Session'].astype(int)
-#             df['Subject'] = df['Subject'].astype(int)
+            df2 = pd.read_csv(fnames[i])
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
                     for j in range(len(df2)):

@@ -32,14 +32,14 @@ def load_data(fnames, reset_sessions = False): #when reset_sessions = False --> 
     for i,file in enumerate(fnames):
         
         if i == 0:
-            df = check_file_type(file, i)
+            df = pd.read_csv(fnames[i])
             if reset_sessions:
                 for i,session in enumerate(df.Session.unique()):
                     for j in range(len(df)):
                         if df.at[j,'Session'] == session:
                             df.at[j,'Session'] = i + 1
         else:
-            df2 = check_file_type(file, i)
+            df2 = pd.read_csv(fnames[i])
             if reset_sessions:
                 for i,session in enumerate(df2.Session.unique()):
                     for j in range(len(df2)):
