@@ -240,12 +240,12 @@ def get_inference_data_log_lik(md_df, log_lik_values, fit):
     """takes in log_lik_values from get_log_lik_values, and creates an inference data object"""
     
     total_ntr = md_df.at[0, 'ntr'] #total trials in md_df, which represents the total number of trials for a cue variant 
-    print(total_ntr)
-    print(3200)
-    print(len(log_lik_values))
+#     print(total_ntr)
+#     print(3200)
+#     print(len(log_lik_values))
     
     #build index
-    iterables = [[0,1,2,3], list(range(0,1000)), list(range(0, total_ntr))] #4 chains, 1000 draws, total_ntr trials
+    iterables = [[0,1,2,3], list(range(0,800)), list(range(0, total_ntr))] #4 chains, 800 draws, total_ntr trials
     index = pd.MultiIndex.from_product(iterables, names=["chain", "draw", "trial"])
     
     #build InferenceData (id) object 
