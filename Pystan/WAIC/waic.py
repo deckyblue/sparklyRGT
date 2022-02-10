@@ -61,7 +61,7 @@ def chosen_outcome_data(md_df, ntr_df, subs_unique):
     return chosen, outcome
 
 def get_params(fit, subs_unique, model):
-    """takes in fit, subs_unique, and model name (str) ("basic, basicstar, pscale, pscalestar, pindep or pindepstar"), and outputs 4000 sets of parameters"""
+    """takes in fit, subs_unique, and model name (str) ("basic, basicstar, pscale, pscalestar, pindep or pindepstar"), and outputs 3200 sets of parameters"""
     
     if model == "basic": 
         fit_beta_df = fit.posterior.beta.to_dataframe()
@@ -203,13 +203,13 @@ def log_lik_values(sub_df, model):
         ntr = sub_df.at[s,'range_ntr']
         chosen_data = sub_df.at[s,'chosen_data']
         outcome_data = sub_df.at[s,'outcome_data']
-        params = sub_df.at[s, 'params_s'] #4000 sets of parameters 
+        params = sub_df.at[s, 'params_s'] #3200 sets of parameters 
         
         #updating model values
         V = np.zeros(4) # [0,0,0,0]
 #         Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
         
-        paramsXtrial = [(p, t) for p in range(4000) for t in range(ntr[-1]+1 - ntr[0])] #4000 sets of parameters, for ntr trials
+        paramsXtrial = [(p, t) for p in range(3200) for t in range(ntr[-1]+1 - ntr[0])] #3200 sets of parameters, for ntr trials
         for (p, t) in paramsXtrial: 
 
             if t == 0: #if using a new set of parameters (if first trial, reset)...
@@ -240,12 +240,12 @@ def get_inference_data_log_lik(md_df, log_lik_values, fit):
     """takes in log_lik_values from get_log_lik_values, and creates an inference data object"""
     
     total_ntr = md_df.at[0, 'ntr'] #total trials in md_df, which represents the total number of trials for a cue variant 
-    print(total_ntr)
-    print(4000)
-    print(len(log_lik_values))
+#     print(total_ntr)
+#     print(3200)
+#     print(len(log_lik_values))
     
     #build index
-    iterables = [[0,1,2,3], list(range(0,1000)), list(range(0, total_ntr))] #4 chains, 1000 draws, total_ntr trials
+    iterables = [[0,1,2,3], list(range(0,800)), list(range(0, total_ntr))] #4 chains, 800 draws, total_ntr trials
     index = pd.MultiIndex.from_product(iterables, names=["chain", "draw", "trial"])
     
     #build InferenceData (id) object 
