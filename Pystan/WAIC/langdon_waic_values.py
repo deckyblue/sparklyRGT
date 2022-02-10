@@ -21,7 +21,7 @@ classic_pindep_fit = az.from_netcdf('../stan_outputs/Classic_pindep_fit.nc')
 cued_basicstar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/cue_basicstar_fit.nc')
 classic_basicstar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/Classic_basicstar_fit.nc')
 
-cued_pscalestar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/cue_pscale_fit.nc')
+cued_pscalestar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/cue_pscalestar_fit.nc')
 classic_pscalestar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/Classic_pscalestar_fit.nc')
 
 cued_pindepstar_fit = az.from_netcdf('/scratch/st-caw42-1/stan_outputs/cue_pindepstar_fit.nc')
@@ -45,7 +45,7 @@ basic_list_SE = [cued_basic_waic.waic_se, classic_basic_waic.waic_se]
 
 ##
 cued_basicstar_waic = wc.waic_fit(df, 5, cued_subs, cued_basicstar_fit, "basicstar")
-classic_basic_waic = wc.waic_fit(df, 5, classic_subs, classic_basicstar_fit, "basicstar")
+classic_basicstar_waic = wc.waic_fit(df, 5, classic_subs, classic_basicstar_fit, "basicstar")
 
 basicstar_list = [cued_basicstar_waic.waic, classic_basicstar_waic.waic]
 basicstar_list_SE = [cued_basicstar_waic.waic_se, classic_basicstar_waic.waic_se]
@@ -75,8 +75,8 @@ pindep_list_SE = [cued_pindep_waic.waic_se, classic_pindep_waic.waic_se]
 cued_pindepstar_waic = wc.waic_fit(df, 5, cued_subs, cued_pindepstar_fit, "pindepstar")
 classic_pindepstar_waic = wc.waic_fit(df, 5, classic_subs, classic_pindepstar_fit, "pindepstar")
 
-pindep_list = [cued_pindepstar_waic.waic, classic_pindepstar_waic.waic]
-pindep_list_SE = [cued_pindepstar_waic.waic_se, classic_pindepstar_waic.waic_se]
+pindepstar_list = [cued_pindepstar_waic.waic, classic_pindepstar_waic.waic]
+pindepstar_list_SE = [cued_pindepstar_waic.waic_se, classic_pindepstar_waic.waic_se]
 
 ##CREATE AND EXPORT DATAFRAME
 waic_values = pd.DataFrame(
