@@ -61,7 +61,7 @@ def chosen_outcome_data(md_df, ntr_df, subs_unique):
     return chosen, outcome
 
 def get_params(fit, subs_unique, model):
-    """takes in fit, subs_unique, and model name (str) ("basic, basicstar, pscale, pscalestar, pindep or pindepstar"), and outputs 3200 sets of parameters"""
+    """takes in fit, subs_unique, and model name (str) ("basic, basicstar, pscale, pscalestar, pindep or pindepstar"), and outputs n sets of parameters"""
     
     if model == "basic": 
         fit_beta_df = fit.posterior.beta.to_dataframe()
@@ -187,7 +187,7 @@ def get_sub_df(df, numsessions, subs, fit, model):
     
     return ntr_df, md_df
 
-def log_lik_values(sub_df, model):
+def log_lik_values(sub_df, model, num_param):
     """takes in sub_df, and gets all the log_likelihood values in a list"""
     
     log_lik_values = [] #stores log_lik_values for all subjects
@@ -203,13 +203,13 @@ def log_lik_values(sub_df, model):
         ntr = sub_df.at[s,'range_ntr']
         chosen_data = sub_df.at[s,'chosen_data']
         outcome_data = sub_df.at[s,'outcome_data']
-        params = sub_df.at[s, 'params_s'] #3200 sets of parameters 
+        params = sub_df.at[s, 'params_s'] #sets of parameters 
         
-        #updating model values
+        # updating model values
         V = np.zeros(4) # [0,0,0,0]
-#         Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
-        
-        paramsXtrial = [(p, t) for p in range(3200) for t in range(ntr[-1]+1 - ntr[0])] #3200 sets of parameters, for ntr trials
+        # Q = np.zeros([4,ntr]) #1 array of 4 rows and ntr columns
+        # sets of parameters, for ntr trials
+        paramsXtrial = [(p, t) for p in range(num_param) for t in range(ntr[-1]+1 - ntr[0])] 
         for (p, t) in paramsXtrial: 
 
             if t == 0: #if using a new set of parameters (if first trial, reset)...
@@ -236,16 +236,15 @@ def log_lik_values(sub_df, model):
     
     return log_lik_values
 
-def get_inference_data_log_lik(md_df, log_lik_values, fit):
+def get_inference_data_log_lik(md_df, log_lik_values, fit, num_draws):
     """takes in log_lik_values from get_log_lik_values, and creates an inference data object"""
     
     total_ntr = md_df.at[0, 'ntr'] #total trials in md_df, which represents the total number of trials for a cue variant 
 #     print(total_ntr)
-#     print(3200)
 #     print(len(log_lik_values))
     
     #build index
-    iterables = [[0,1,2,3], list(range(0,800)), list(range(0, total_ntr))] #4 chains, 800 draws, total_ntr trials
+    iterables = [[0,1,2,3], list(range(0,num_draws)), list(range(0, total_ntr))] #4 chains, n draws, total_ntr trials
     index = pd.MultiIndex.from_product(iterables, names=["chain", "draw", "trial"])
     
     #build InferenceData (id) object 
@@ -255,8 +254,8 @@ def get_inference_data_log_lik(md_df, log_lik_values, fit):
     id_log_likelihood = fit.assign(x_log_likelihood)
     
     return id_log_likelihood
-
-def waic_fit(df, numsessions, subs, fit, model):
+## pass in num_param here -- main function, num_draws=1000 as well num_params = draws* 4
+def waic_fit(df, numsessions, subs, fit, model, draws):
     """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
     df - product of rgt.load_multiple_data,
     numsessions = 5,
@@ -264,9 +263,10 @@ def waic_fit(df, numsessions, subs, fit, model):
     fit = .nc object storing the model and fit
     model = model name (str)"""
     
-    subs_df, md_df = get_sub_df(df, numsessions, subs, fit, model) #calculating subs twice 
-    log_lik_values_list = log_lik_values(subs_df, model)
-    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values_list, fit)
+    subs_df, md_df = get_sub_df(df, numsessions, subs, fit, model) #calculating subs twice
+    num_params = draws * 4
+    log_lik_values_list = log_lik_values(subs_df, model, num_params)
+    id_log_likelihood = get_inference_data_log_lik(md_df, log_lik_values_list, fit, draws)
     
     waic = az.waic(id_log_likelihood)
     return waic
