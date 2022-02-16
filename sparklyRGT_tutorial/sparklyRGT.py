@@ -777,6 +777,7 @@ def choice_bar_plot(startsess, endsess, scores, sem, task = None):
     ax.set_title( 'P1-P4 Choice'  '\n' + 'Session ' + str(startsess) + '-' + str(endsess), 
                  fontweight = 'bold', fontsize = 22, pad = 20)
     ax.set_ylim(bottom = 0)
+    ax.xaxis.label.set_size(20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
     ax.spines['left'].set_linewidth(2)
