@@ -777,11 +777,57 @@ def choice_bar_plot(startsess, endsess, scores, sem, task = None):
     ax.set_title( 'P1-P4 Choice'  '\n' + 'Session ' + str(startsess) + '-' + str(endsess), 
                  fontweight = 'bold', fontsize = 22, pad = 20)
     ax.set_ylim(bottom = 0)
+    ax.xaxis.label.set_size(20)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
     ax.spines['left'].set_linewidth(2)
     ax.spines['bottom'].set_linewidth(2)
     ax.legend()
+    
+def choice_line_plot(option,startsess, endsess, title, scores, sem, group_names = None, highlight = None, y_label = None, x_label = 'Session'):
+    if y_label == None:
+        y_label = option
+    plt.rcParams.update({'font.size': 18})
+    fig,ax = plt.subplots(figsize = (15,8))
+    ax.set_ylabel(y_label, fontweight='bold', fontsize = 20)
+    ax.set_xlabel(x_label, fontweight = 'bold', fontsize = 20)
+    ax.set_title(title + ': ' + y_label + '\n' + x_label + ' ' + str(startsess) + '-' + str(endsess),
+                fontweight = 'bold', fontsize = 22, pad = 20)
+    ax.spines['right'].set_linewidth(0)
+    ax.spines['top'].set_linewidth(0)
+    ax.spines['left'].set_linewidth(2)
+    ax.spines['bottom'].set_linewidth(2)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.set_xticks(np.arange(startsess,endsess+1))
+    
+    
+     #define x axis (range of session numbers we are graphing)
+    x=np.arange(startsess,endsess+1)
+    #extract column names to include in figure
+    columns = []
+    for col in scores.columns:
+        for session_number in [str(i) for i in x]: #turns session numbers in x into strings
+            #check if variable name is in column name and column name starts with session number + P option
+            if option in col and col.startswith(session_number + option):
+                #if so, append column name to columns list
+                columns.append(col)
+
+    if group_names == None:
+        y = scores.loc['All rats',columns]
+        plt.errorbar(x, y,
+                     yerr = sem.loc['All rats',columns], 
+                     linewidth=5, capsize = 8)
+    else:
+        for i,group in enumerate(group_names.values()):
+            y = scores.loc[group,columns]
+            plt.errorbar(x, y,
+                         yerr = sem.loc[group,columns], 
+                         label=group,linewidth=5, capsize = 8)
+            ax.legend()
+       
+    if highlight != None:
+        plt.axvline(highlight, 0, 1, color = 'gray', lw = 1)
+        ax.fill_between([highlight,endsess], ax.get_ylim()[0], ax.get_ylim()[1], facecolor='gray', alpha=0.2)
     
 #------------------------------PLOTTING for Latin Squares---------------------------------#
     
