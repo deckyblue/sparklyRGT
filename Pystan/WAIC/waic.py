@@ -254,7 +254,7 @@ def get_inference_data_log_lik(md_df, log_lik_values, fit, num_draws):
     id_log_likelihood = fit.assign(x_log_likelihood)
     
     return id_log_likelihood
-## pass in num_param here -- main function, num_draws=1000 as well num_params = draws* 4
+
 def waic_fit(df, numsessions, subs, fit, model, draws):
     """summary function: takes in all parameters and outputs WAIC table using az.waic() // parameters:
     df - product of rgt.load_multiple_data,
