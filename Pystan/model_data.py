@@ -175,3 +175,82 @@ def get_data_dict(df,startSubject, startSession):
                   'O': O}
     
     return model_data
+
+##--------------------rgt_model_posterior_figures----------------------###
+def round_up(n):
+    if n - math.floor(n) < 0.5:
+        return math.floor(n)
+    return math.ceil(n)
+
+def sample_diff(num_params, fit1, fit2):
+    """Takes in num_params (ex. basic = 4), fit1 and fit2 (4 chains) and outputs the sample difference distribution (fit1 - fit2) for the group parameters
+    Also outputs Cohen's d, probability of superiority (Prob Sup)... and the distribution's mean, 94% HDI, and probability density to the left and right of 0
+    If the 94% HDI does not contain 0, then the parameters are credibly different"""
+    
+    #variables
+    dist = stats.norm()
+    _, ax = plt.subplots(round_up(num_params/2), 2, figsize=(20, 10), constrained_layout=True)
+    comparisons = [(j) for j in range(num_params)]
+    pos = [(k, l) for k in range(round_up(num_params/2)) for l in range(2)]
+    #comparisons
+    for (j), (k, l) in zip(comparisons, pos):
+        print(k,l)
+        means_diff = fit1.posterior.mu_pr[:,:,j] - fit2.posterior.mu_pr[:,:,j] #means_diff holds the distribution of the sample difference 
+        d_cohen = (means_diff / np.sqrt((fit1.posterior.sigma[:,:,j]**2 + fit2.posterior.sigma[:,:,j]**2) / 2)).mean() 
+        ps = dist.cdf(d_cohen/(2**0.5))
+        #plots posteriors in 2D array of locations: for example, mu_0 - mu_0 will be in the 0,0 box (top left)
+        az.plot_posterior(means_diff, ref_val=0, ax=ax[k, l]) 
+        ax[k, l].set_title(f'$\mu_{j}-\mu_{j}$')
+        ax[k, l].plot(0, label=f"Cohen's d = {d_cohen.values:.2f}\nProb sup = {ps:.2f}", alpha=0)
+        ax[k, l].legend();
+        
+def get_mean_params(model_fit, model):
+    # delete model_data.nc (if error, comment out this line, no file exists yet)
+    os.remove('model_param.nc')
+    
+    param_est = []
+
+    # save original data to file
+    model_fit.to_netcdf("model_param.nc")
+    file_name = "model_param.nc"
+
+    temp = az.from_netcdf(file_name)
+    param_est.append(az.summary(transform_beta(temp.posterior))['mean'][0])
+    
+    if model == "pindep":
+        temp = az.from_netcdf(file_name)
+        # get etapos, etaneg
+        eta = az.summary(transform1(temp.posterior))['mean']
+        for i in range(1,3):
+            param_est.append(eta[i]) 
+        temp = az.from_netcdf(file_name)
+        p_val = az.summary(temp)['mean']
+        for i in range(3,7):
+            param_est.append(p_val[i])
+    elif model == 'pindepstar':
+        temp = az.from_netcdf(file_name)
+        # get etapos, etaneg
+        param_est.append(az.summary(transform1(temp.posterior))['mean'][1])
+        temp = az.from_netcdf(file_name)
+        p_val = az.summary(temp)['mean']
+        for i in range(2,6):
+            param_est.append(p_val[i])
+    elif "star" in model:
+        temp = az.from_netcdf(file_name)
+        # get eta
+        param_est.append(az.summary(transform1(temp.posterior))['mean'][1])
+        temp = az.from_netcdf(file_name)
+        p_val = az.summary(temp)['mean']
+        for i in range(2,4):
+            param_est.append(p_val[i])
+    else:
+        temp = az.from_netcdf(file_name)
+        eta = az.summary(transform1(temp.posterior))['mean']
+        for i in range(1,3):
+            param_est.append(eta[i])
+        temp = az.from_netcdf(file_name)
+        p_val = az.summary(temp)['mean']
+        for i in range(3,5):
+            param_est.append(p_val[i]) 
+                   
+    return param_est
