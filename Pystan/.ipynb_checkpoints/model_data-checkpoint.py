@@ -223,6 +223,7 @@ def transform_beta(dataset):
     return dataset
         
 def get_mean_params(model_fit, model):
+    # access data in Pystan/nc_file folder
     # delete model_data.nc (if error, comment out this line, no file exists yet)
     os.remove('model_param.nc')
     
