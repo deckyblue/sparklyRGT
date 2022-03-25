@@ -1,5 +1,13 @@
 import pandas as pd
 import numpy as np
+import os
+import arviz as az
+import math
+from scipy import stats
+from scipy.stats import norm
+import xarray as xr
+import copy
+import matplotlib.pyplot as plt
 
 def get_model_data(df,numsessions, subjects):
     df = get_choices(df) 
@@ -203,6 +211,16 @@ def sample_diff(num_params, fit1, fit2):
         ax[k, l].set_title(f'$\mu_{j}-\mu_{j}$')
         ax[k, l].plot(0, label=f"Cohen's d = {d_cohen.values:.2f}\nProb sup = {ps:.2f}", alpha=0)
         ax[k, l].legend();
+
+def transform1(dataset):
+    variable = norm.pdf(dataset.mu_pr.values)
+    dataset.mu_pr.values = variable
+    return dataset
+
+def transform_beta(dataset):
+    variable = norm.pdf(dataset.mu_pr.values)*100
+    dataset.mu_pr.values = variable
+    return dataset
         
 def get_mean_params(model_fit, model):
     # delete model_data.nc (if error, comment out this line, no file exists yet)
