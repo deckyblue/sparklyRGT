@@ -480,11 +480,12 @@ def get_risk_status_long(df_long_sum, sessions = None):
     subs = df_long_sum.Subject.unique()
     mean_risk_list = []
     sessions = filt_sess(df_long_sum, sessions)
+    all_sess = df_long_sum.Session.unique()
          
     for s in subs: 
         df_sub = df_long_sum.loc[(df_long_sum['Session'].isin(sessions)) & (df_long_sum['Subject'] == s)] #df where Subject == s and where Session == startsess to endsess 
         mean_risk = df_sub['risk'].mean() #mean_risk
-        for s in sessions:
+        for s in all_sess:
             mean_risk_list.append(mean_risk)
     df_long_sum["mean_risk"] = mean_risk_list 
     
@@ -509,6 +510,23 @@ def get_group_long(df_long, group_list):
                 elif group == group_list[3]:
                     df_long.at[row,'group'] = 4
     return df_long
+
+def get_group_columns(df_long, group_list, group_names):
+    """takes in df_long, group_list, group_names and creates columns for each group in group_name and is coded such that 1 = member of that group, and 0 = not a member of that group; for mixed effects modeling purposes"""
+    #transform group names into a subscriptable list
+    group_names_list = list(group_names.values())
+    #create columns for each group 
+    for group_name in group_names_list: 
+        df_long[group_name] = ""
+
+    for i,group in enumerate(group_list): #for each group in the group list 
+        for row in df_long.index: #for each row
+            if np.isin(df_long.at[row,'Subject'], group): #if the subject is in that particular group
+                df_long.at[row,group_names[i]] = 1 #assign the value to the group_names column as 1
+            else: #otherwise set it as zero
+                df_long.at[row,group_names[i]] = 0
+    return df_long
+
 
 #--------------------------------ANOVA-------------------------------#
 
