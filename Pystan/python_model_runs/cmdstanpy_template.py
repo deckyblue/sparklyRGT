@@ -56,6 +56,10 @@ task_list = df.groupby(['MSN'])['Subject'].unique()
 ##change between model runs
 subs = np.concatenate(task_list[[task for task in df.MSN.unique() if task_name in task]])
 
+#save subject dictionary
+subject_dict,startSubject = md.start_subject(df, save_dict = True)
+#save subject_dict to csv
+
 #---------------------------------------------
 
 #set path to cmdstanpy location
@@ -63,6 +67,7 @@ set_cmdstan_path('/scratch/st-caw42-1/cmdstan-2.28.2')
 
 #extract model data from dataframe
 model_data = md.get_model_data(df, numsessions, subs)
+
 
 #load in stan model code from file
 #should be uploaded to cmdstan-2.28.2 directory in scratch

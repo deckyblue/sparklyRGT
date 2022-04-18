@@ -110,7 +110,7 @@ def get_choices(df):
 
 
 
-def start_subject(df):
+def start_subject(df, save_dict = False):
 #startSubject is a list the length of the df, where it equals the subject number at the start of that subject's data 
 #and zero otherwise
 
@@ -136,7 +136,10 @@ def start_subject(df):
 
     #set the first value to the first subject number
     startSubject[0] = min(df.Sub)
-    return startSubject
+    if save_dict = True:
+        return sub_dict,startSubject
+    else: 
+        return startSubject
 
 
 def start_session(df):
