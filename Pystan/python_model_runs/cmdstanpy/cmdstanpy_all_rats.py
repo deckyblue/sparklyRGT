@@ -14,15 +14,15 @@ import csv
 numsessions = 5
 
 #task to do modelling on - should be 'Classic' for uncued task, 'cue' for cued task 
-task_name = 'cue'
+task_name = 'all-rats'
 
 #insert the names of the files to do the modeling on 
-fnames = ['']
+fnames = ['BH09_raw-free_S1-5_corrected.xlsx','CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx',"CH01_corrected.xlsx"]
 
 #choose the model (.stan file should be uploaded to cmdstan directory in scratch)
-model_file_name = 'rGT_RLmodel_basic.stan'
+model_file_name = 'rGT_RLmodel_pIndependent.stan'
 #shortened name of model for file naming later on: (basic, basicstar, pscale, pscalestar, pindep, pindepstar)
-model_name = 'basic'
+model_name = 'pindep'
 
 #--------------------------
 
@@ -49,17 +49,17 @@ df = md.load_multiple_data(fnames, reset_sessions = True)
 
 
 #create lists of subjects run on each task (classic A, classic B, etc.)
-task_list = df.groupby(['MSN'])['Subject'].unique()
+#task_list = df.groupby(['MSN'])['Subject'].unique()
 
 #concatenate together the lists of subjects that run the same task (i.e., puts version A 
 #and version B together) - based on unique string for task name (stored in task_name)
 
 ##change between model runs
-subs = np.concatenate(task_list[[task for task in df.MSN.unique() if task_name in task]])
+subs = df.Subject.unique()
 
 #save subject dictionary
 subject_dict,startSubject = md.start_subject(df, save_dict = True)
-#save subject_dict to csv
+
 
 #---------------------------------------------
 
@@ -83,8 +83,8 @@ fit = model.sample(data = model_data, chains = 4, iter_sampling = 800, iter_warm
 #---------------------------------------------
 
 #save all the output and summary df 
-fit.save_csvfiles(dir='/scratch/st-caw42-1/stan_output')
-fit_summary = fit.summary().to_csv('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name + '_fit_summary.csv')
+#fit.save_csvfiles(dir='/scratch/st-caw42-1/stan_output')
+#fit_summary = fit.summary().to_csv('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name + '_fit_summary.csv')
 
 # save subject dictionary to scratch folder
 with open('/scratch/st-caw42-1/stan_output/subject_dict.csv', 'w') as f:
