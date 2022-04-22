@@ -136,7 +136,7 @@ def start_subject(df, save_dict = False):
 
     #set the first value to the first subject number
     startSubject[0] = min(df.Sub)
-    if save_dict = True:
+    if save_dict:
         return sub_dict,startSubject
     else: 
         return startSubject

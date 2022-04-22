@@ -35,17 +35,17 @@ df = md.load_multiple_data(fnames, reset_sessions = True)
 
 #if running on rgt variant dataset, uncomment the following lines: 
 
-# df = df.replace(to_replace = {'MSN':
-#                          {'LossrGT_A-losscue_v1': 'outcomeRGT_A',
-#                         'LossrGT_B-losscue_v1': 'outcomeRGT_B',
-#                          'AnarchyrGT_A-losscue_v6':'RandomRGT_A',
-#                         'AnarchyrGT_B-losscue_v6': 'RandomRGT_B',
-#                          'MisrGT_A-cue':'RevRGT_A',
-#                          'MisrGT_B-cue':'RevRGT_B',
-#                          'RevRGT_A-cue':'RevRGT_A',
-#                          'RevRGT_B-cue':'RevRGT_B',
-#                          'LossRGT_A':'lossRGT_A'
-#                         }})
+df = df.replace(to_replace = {'MSN':
+                         {'LossrGT_A-losscue_v1': 'outcomeRGT_A',
+                        'LossrGT_B-losscue_v1': 'outcomeRGT_B',
+                         'AnarchyrGT_A-losscue_v6':'RandomRGT_A',
+                        'AnarchyrGT_B-losscue_v6': 'RandomRGT_B',
+                         'MisrGT_A-cue':'RevRGT_A',
+                         'MisrGT_B-cue':'RevRGT_B',
+                         'RevRGT_A-cue':'RevRGT_A',
+                         'RevRGT_B-cue':'RevRGT_B',
+                         'LossRGT_A':'lossRGT_A'
+                        }})
 
 
 #create lists of subjects run on each task (classic A, classic B, etc.)
@@ -86,10 +86,10 @@ fit = model.sample(data = model_data, chains = 4, iter_sampling = 800, iter_warm
 #fit.save_csvfiles(dir='/scratch/st-caw42-1/stan_output')
 #fit_summary = fit.summary().to_csv('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name + '_fit_summary.csv')
 
+fit_az = az.from_cmdstanpy(fit)
+fit_az.to_netcdf('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name +  '_fit.nc')
+
 # save subject dictionary to scratch folder
 with open('/scratch/st-caw42-1/stan_output/subject_dict.csv', 'w') as f:
     for key in subject_dict.keys():
         f.write("%s,%s\n"%(key,subject_dict[key]))
-
-fit_az = az.from_cmdstanpy(fit)
-fit_az.to_netcdf('/scratch/st-caw42-1/stan_output/' + task_name + '_' + model_name +  '_fit.nc')
