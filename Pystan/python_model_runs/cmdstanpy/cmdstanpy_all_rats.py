@@ -17,7 +17,7 @@ numsessions = 5
 task_name = 'all-rats'
 
 #insert the names of the files to do the modeling on 
-fnames = ['BH09_raw-free_S1-5_corrected.xlsx','CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx',"CH01_corrected.xlsx"]
+fnames = ["CH01_corrected.xlsx",'CH02_corrected.xlsx','NA01_raw_free-choice_S8-18.xlsx','BH09_raw-free_S1-5_corrected.xlsx']
 
 #choose the model (.stan file should be uploaded to cmdstan directory in scratch)
 model_file_name = 'rGT_RLmodel_pIndependent.stan'

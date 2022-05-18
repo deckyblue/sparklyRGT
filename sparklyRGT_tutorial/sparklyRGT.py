@@ -502,9 +502,9 @@ def get_group_long(df_long, group_list):
         for group in group_list: 
             if np.isin(df_long.at[row,'Subject'], group):
                 if group == group_list[0]:
-                    df_long.at[row,'group'] = 1
+                    df_long.at[row,'group'] = int(1)
                 elif group == group_list[1]:
-                    df_long.at[row,'group'] = 2
+                    df_long.at[row,'group'] = int(2)
                 elif group == group_list[2]:
                     df_long.at[row,'group'] = 3
                 elif group == group_list[3]:
