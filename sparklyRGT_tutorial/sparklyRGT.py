@@ -411,17 +411,16 @@ def get_summary_data(df_raw, mode = 'Session', task = None):
 def get_long_summary_data(df_edited, df_sum, task = None): 
     "takes in the edited df (after dropping subjects and sessions) and wide-summary df, and outputs a long-summary df"
     "Cannot take subjects with different session numbers"
-    subs = df_edited.Subject.unique() #list of subjects
-    subs.sort() 
-
-    sess = list(df_edited.Session.unique())
-    sess.sort()
-    all_sess = []
-    for i in range(len(subs)): #for all subjects 
-        all_sess.append(sess) #all_sess is now a list of lists (sess)
-
-    df_temp = df_edited.groupby(['Subject','Session'],as_index=False)['Trial'].max()
-    df_temp.drop('Trial', inplace=True, axis=1)
+ 
+    sess_list = list(df_edited.Session.unique())
+    sess_list.sort()
+    
+    subs = list(df_edited.Subject.unique())
+    subs.sort()
+    subs_repeated = np.repeat(subs,len(sess_list))
+   
+    df_temp = pd.DataFrame({'Subject':subs_repeated, 
+                            'Session':sess_list*len(subs)})
 
     if task == 'choiceRGT':
         choice_names = ['P1_C','P2_C','P3_C','P4_C','P1_U','P2_U','P3_U','P4_U']
@@ -430,7 +429,7 @@ def get_long_summary_data(df_edited, df_sum, task = None):
 
     for col in choice_names:
         df_temp[col] = [0] * len(df_temp) #create a column of zeros for the length
-        for session in sess: #for each session
+        for session in sess_list: #for each session
             for rat in subs: #for each subject
                 idx = df_temp.loc[np.logical_and(df_temp['Subject'] == rat, df_temp['Session'] == session)].index.values
                 df_temp.at[idx, col] = df_sum.at[rat, str(session) + col] 
@@ -443,7 +442,7 @@ def get_long_summary_data(df_edited, df_sum, task = None):
 
     for col in column_names:
         df_temp[col] = [0] * len(df_temp)
-        for session in sess:
+        for session in sess_list:
             for rat in subs:
                 idx = df_temp.loc[np.logical_and(df_temp['Subject'] == rat, df_temp['Session'] == session)].index.values
                 df_temp.at[idx, col] = df_sum.at[rat, col + str(session)]
